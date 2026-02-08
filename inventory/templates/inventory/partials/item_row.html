@@ -1,0 +1,21 @@
+<tr id="item-row-{{ item.pk }}" class="{% if item.is_low_stock %}low-stock{% endif %}">
+  <td><a href="{% url 'inventory:item_detail' item.pk %}">{{ item.name }}</a></td>
+  <td>{{ item.get_category_display }}</td>
+  <td>{{ item.subcategory_display }}</td>
+  <td class="qty">{{ item.quantity_on_hand }}</td>
+  <td>{{ item.get_unit_of_measure_display }}</td>
+  <td>
+    {% if item.is_low_stock %}
+      <span class="badge badge-warning">Low</span>
+    {% else %}
+      <span class="badge badge-ok">OK</span>
+    {% endif %}
+  </td>
+  <td class="actions">
+    <button hx-get="{% url 'inventory:adjust_stock' item.pk %}"
+            hx-target="#item-row-{{ item.pk }}"
+            hx-swap="outerHTML"
+            class="btn btn-sm">Adjust</button>
+    <a href="{% url 'inventory:item_update' item.pk %}" class="btn btn-sm">Edit</a>
+  </td>
+</tr>

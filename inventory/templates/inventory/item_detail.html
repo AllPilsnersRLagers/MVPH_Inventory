@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} — MVPH Inventory{% endblock %}
+
+{% block content %}
+<div class="detail-header">
+  <h1>{{ item.name }}</h1>
+  <div class="detail-actions">
+    <a href="{% url 'inventory:item_update' item.pk %}" class="btn btn-primary">Edit</a>
+    <a href="{% url 'inventory:item_delete' item.pk %}" class="btn btn-danger">Delete</a>
+  </div>
+</div>
+
+<div class="detail-card">
+  <dl>
+    <dt>Category</dt>
+    <dd>{{ item.get_category_display }}</dd>
+
+    <dt>Subcategory</dt>
+    <dd>{{ item.subcategory_display }}</dd>
+
+    <dt>Quantity on Hand</dt>
+    <dd>
+      {{ item.quantity_on_hand }} {{ item.get_unit_of_measure_display }}
+      {% if item.is_low_stock %}<span class="badge badge-warning">Low Stock</span>{% endif %}
+    </dd>
+
+    <dt>Reorder Point</dt>
+    <dd>{{ item.reorder_point }} {{ item.get_unit_of_measure_display }}</dd>
+
+    {% if item.description %}
+    <dt>Description</dt>
+    <dd>{{ item.description }}</dd>
+    {% endif %}
+
+    {% if item.notes %}
+    <dt>Notes</dt>
+    <dd>{{ item.notes }}</dd>
+    {% endif %}
+
+    <dt>Created</dt>
+    <dd>{{ item.created_at|date:"N j, Y g:i a" }}</dd>
+
+    <dt>Updated</dt>
+    <dd>{{ item.updated_at|date:"N j, Y g:i a" }}</dd>
+  </dl>
+</div>
+
+<a href="{% url 'inventory:item_list' %}">&larr; Back to list</a>
+{% endblock %}

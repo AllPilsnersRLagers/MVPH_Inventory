@@ -1,0 +1,49 @@
+{% if items %}
+<table class="item-table">
+  <thead>
+    <tr>
+      {% for col in columns %}
+      <th>
+        <a href="{{ col.url }}"
+           hx-get="{{ col.url }}"
+           hx-target="#item-table-wrapper"
+           class="sort-header{% if col.active %} active{% endif %}">{{ col.label }}</a>
+      </th>
+      {% endfor %}
+      <th>Unit</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+      {% include "inventory/partials/item_row.html" %}
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty-state">No items found.</p>
+{% endif %}
+
+<div id="category-tabs" class="category-tabs" role="tablist" hx-swap-oob="true">
+  <a href="{% url 'inventory:item_list' %}"
+     class="tab {% if not current_category %}active{% endif %}"
+     hx-get="{% url 'inventory:item_list' %}"
+     hx-target="#item-table-wrapper"
+     hx-push-url="true">All</a>
+  <a href="{% url 'inventory:item_list' %}?category=ingredient"
+     class="tab {% if current_category == 'ingredient' %}active{% endif %}"
+     hx-get="{% url 'inventory:item_list' %}?category=ingredient"
+     hx-target="#item-table-wrapper"
+     hx-push-url="true">Ingredients</a>
+  <a href="{% url 'inventory:item_list' %}?category=chemical"
+     class="tab {% if current_category == 'chemical' %}active{% endif %}"
+     hx-get="{% url 'inventory:item_list' %}?category=chemical"
+     hx-target="#item-table-wrapper"
+     hx-push-url="true">Chemicals</a>
+  <a href="{% url 'inventory:item_list' %}?category=finished_good"
+     class="tab {% if current_category == 'finished_good' %}active{% endif %}"
+     hx-get="{% url 'inventory:item_list' %}?category=finished_good"
+     hx-target="#item-table-wrapper"
+     hx-push-url="true">Finished Goods</a>
+</div>

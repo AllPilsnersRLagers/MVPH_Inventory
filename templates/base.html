@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}MVPH Inventory{% endblock %}</title>
+  <link rel="stylesheet" href="{% load static %}{% static 'css/style.css' %}">
+  <script src="{% static 'js/htmx.min.js' %}" defer></script>
+</head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <header>
+    <nav>
+      <a href="{% url 'inventory:item_list' %}" class="logo">MVPH Inventory</a>
+      <a href="{% url 'inventory:item_create' %}" class="btn btn-primary">+ New Item</a>
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

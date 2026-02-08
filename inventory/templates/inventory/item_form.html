@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}{% if item %}Edit {{ item.name }}{% else %}New Item{% endif %} — MVPH Inventory{% endblock %}
+
+{% block content %}
+<h1>{% if item %}Edit {{ item.name }}{% else %}New Item{% endif %}</h1>
+
+<form method="post" class="item-form">
+  {% csrf_token %}
+
+  {% for field in form %}
+  <div class="form-group {% if field.errors %}has-error{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {% if field.name == "category" %}
+      <select name="category" id="id_category"
+              hx-get="{% url 'inventory:subcategory_options' %}"
+              hx-target="#id_subcategory"
+              hx-swap="outerHTML"
+              hx-include="[name='category']">
+        <option value="">---------</option>
+        {% for value, label in field.field.choices %}
+          {% if value %}
+          <option value="{{ value }}" {% if value == field.value %}selected{% endif %}>{{ label }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    {% else %}
+      {{ field }}
+    {% endif %}
+    {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+    {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+  </div>
+  {% endfor %}
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{% if item %}Save Changes{% else %}Create Item{% endif %}</button>
+    <a href="{% if item %}{% url 'inventory:item_detail' item.pk %}{% else %}{% url 'inventory:item_list' %}{% endif %}" class="btn">Cancel</a>
+  </div>
+</form>
+{% endblock %}
