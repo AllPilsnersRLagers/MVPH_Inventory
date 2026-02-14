@@ -9,6 +9,9 @@
   {% csrf_token %}
 
   {% for field in form %}
+    {% if field.name == "earmarked_for" %}
+      {# Rendered separately below in earmarked-wrapper #}
+    {% else %}
   <div class="form-group {% if field.errors %}has-error{% endif %}">
     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
     {% if field.name == "category" %}
@@ -30,7 +33,27 @@
     {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
     {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
   </div>
+    {% endif %}
   {% endfor %}
+
+  {# Earmarked-for wrapper -- shown only when category is ingredient #}
+  <div id="earmarked-wrapper">
+    {% if form.instance.category == "ingredient" %}
+    <div class="form-group {% if form.earmarked_for.errors %}has-error{% endif %}">
+      <label for="id_earmarked_for">Earmarked for</label>
+      <div class="earmarked-field-row">
+        {{ form.earmarked_for }}
+        <button type="button"
+                hx-get="{% url 'inventory:recipe_quick_add' %}"
+                hx-target="#quick-recipe-slot"
+                hx-swap="innerHTML"
+                class="btn btn-sm">+ Recipe</button>
+      </div>
+      <div id="quick-recipe-slot"></div>
+      {% for error in form.earmarked_for.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
   <div class="form-actions">
     <button type="submit" class="btn btn-primary">{% if item %}Save Changes{% else %}Create Item{% endif %}</button>

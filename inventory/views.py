@@ -5,8 +5,8 @@ from uuid import UUID
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import InventoryItemForm, StockAdjustmentForm
-from .models import SUBCATEGORY_MAP, InventoryItem
+from .forms import InventoryItemForm, QuickRecipeForm, RecipeForm, StockAdjustmentForm
+from .models import SUBCATEGORY_MAP, Category, InventoryItem, Recipe
 
 SORTABLE_COLUMNS = [
     ("name", "Name"),
@@ -16,25 +16,32 @@ SORTABLE_COLUMNS = [
 ]
 
 
-def _build_sort_url(category: str, field: str, direction: str) -> str:
-    """Build a query string for sorting, preserving the category filter."""
+def _build_sort_url(
+    category: str, field: str, direction: str, subcategory: str = ""
+) -> str:
+    """Build a query string for sorting, preserving category and subcategory filters."""
     params = f"sort={field}&dir={direction}"
     if category:
-        return f"/?category={category}&{params}"
+        params = f"category={category}&{params}"
+    if subcategory:
+        params = f"{params}&subcategory={subcategory}"
     return f"/?{params}"
 
 
 def item_list(request: HttpRequest) -> HttpResponse:
     """List all inventory items with optional filtering, search, and sorting."""
-    items = InventoryItem.objects.all()
+    items = InventoryItem.objects.select_related("earmarked_for").all()
 
     category = request.GET.get("category", "")
+    subcategory = request.GET.get("subcategory", "")
     search = request.GET.get("search", "")
     sort = request.GET.get("sort", "name")
     direction = request.GET.get("dir", "asc")
 
     if category:
         items = items.filter(category=category)
+    if subcategory:
+        items = items.filter(subcategory=subcategory)
     if search:
         items = items.filter(name__icontains=search)
 
@@ -55,7 +62,7 @@ def item_list(request: HttpRequest) -> HttpResponse:
                 {
                     "field": field,
                     "label": f"{label} {arrow}",
-                    "url": _build_sort_url(category, field, next_dir),
+                    "url": _build_sort_url(category, field, next_dir, subcategory),
                     "active": True,
                 }
             )
@@ -64,18 +71,40 @@ def item_list(request: HttpRequest) -> HttpResponse:
                 {
                     "field": field,
                     "label": label,
-                    "url": _build_sort_url(category, field, "asc"),
+                    "url": _build_sort_url(category, field, "asc", subcategory),
                     "active": False,
+                }
+            )
+
+    # Build sub-tabs for ingredient subcategories
+    sub_tabs: list[dict[str, str | bool]] = []
+    if category == Category.INGREDIENT:
+        sub_tabs.append(
+            {
+                "label": "All",
+                "url": f"/?category={category}",
+                "active": not subcategory,
+            }
+        )
+        for value, label in SUBCATEGORY_MAP[Category.INGREDIENT]:
+            sub_tabs.append(
+                {
+                    "label": label,
+                    "url": f"/?category={category}&subcategory={value}",
+                    "active": subcategory == value,
                 }
             )
 
     context = {
         "items": items,
         "current_category": category,
+        "current_subcategory": subcategory,
         "search_query": search,
         "current_sort": sort,
         "current_dir": direction,
         "columns": columns,
+        "sub_tabs": sub_tabs,
+        "show_earmarked_column": category in ("", Category.INGREDIENT),
     }
 
     if request.headers.get("HX-Request"):
@@ -133,11 +162,22 @@ def adjust_stock(request: HttpRequest, pk: UUID) -> HttpResponse:
     """HTMX endpoint: adjust stock quantity inline."""
     item = get_object_or_404(InventoryItem, pk=pk)
 
+    # Determine if earmarked column is visible based on current page context
+    current_url = request.headers.get("HX-Current-URL", "")
+    show_earmarked = (
+        "category=chemical" not in current_url
+        and "category=finished_good" not in current_url
+    )
+    row_context = {"item": item, "show_earmarked_column": show_earmarked}
+
+    if request.GET.get("cancel"):
+        return render(request, "inventory/partials/item_row.html", row_context)
+
     if request.method == "POST":
         form = StockAdjustmentForm(request.POST)
         if form.is_valid():
             form.apply_to(item)
-            return render(request, "inventory/partials/item_row.html", {"item": item})
+            return render(request, "inventory/partials/item_row.html", row_context)
     else:
         form = StockAdjustmentForm()
 
@@ -152,8 +192,82 @@ def subcategory_options(request: HttpRequest) -> HttpResponse:
     """HTMX endpoint: return subcategory <option> elements for a given category."""
     category = request.GET.get("category", "")
     choices = SUBCATEGORY_MAP.get(category, [])
+    show_earmarked = category == Category.INGREDIENT
+    recipes = Recipe.objects.all() if show_earmarked else Recipe.objects.none()
     return render(
         request,
         "inventory/partials/subcategory_select.html",
-        {"choices": choices},
+        {
+            "choices": choices,
+            "show_earmarked": show_earmarked,
+            "recipes": recipes,
+        },
+    )
+
+
+def recipe_list(request: HttpRequest) -> HttpResponse:
+    """List all recipes."""
+    recipes = Recipe.objects.all()
+    return render(request, "inventory/recipe_list.html", {"recipes": recipes})
+
+
+def recipe_create(request: HttpRequest) -> HttpResponse:
+    """Create a new recipe."""
+    if request.method == "POST":
+        form = RecipeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("inventory:recipe_list")
+    else:
+        form = RecipeForm()
+    return render(request, "inventory/recipe_form.html", {"form": form})
+
+
+def recipe_update(request: HttpRequest, pk: UUID) -> HttpResponse:
+    """Update an existing recipe."""
+    recipe = get_object_or_404(Recipe, pk=pk)
+    if request.method == "POST":
+        form = RecipeForm(request.POST, instance=recipe)
+        if form.is_valid():
+            form.save()
+            return redirect("inventory:recipe_list")
+    else:
+        form = RecipeForm(instance=recipe)
+    return render(
+        request, "inventory/recipe_form.html", {"form": form, "recipe": recipe}
+    )
+
+
+def recipe_delete(request: HttpRequest, pk: UUID) -> HttpResponse:
+    """Delete a recipe after confirmation."""
+    recipe = get_object_or_404(Recipe, pk=pk)
+    if request.method == "POST":
+        recipe.delete()
+        return redirect("inventory:recipe_list")
+    return render(request, "inventory/recipe_confirm_delete.html", {"recipe": recipe})
+
+
+def recipe_quick_add(request: HttpRequest) -> HttpResponse:
+    """HTMX endpoint: quick-add a recipe and return updated earmarked_for select."""
+    if request.method == "POST":
+        form = QuickRecipeForm(request.POST)
+        if form.is_valid():
+            new_recipe = form.save()
+            recipes = Recipe.objects.all()
+            return render(
+                request,
+                "inventory/partials/earmarked_select.html",
+                {"recipes": recipes, "show": True, "selected": new_recipe.pk},
+            )
+        # If invalid, re-show the form with errors
+        return render(
+            request,
+            "inventory/partials/quick_recipe_form.html",
+            {"form": form},
+        )
+    form = QuickRecipeForm()
+    return render(
+        request,
+        "inventory/partials/quick_recipe_form.html",
+        {"form": form},
     )

@@ -22,6 +22,7 @@ class Subcategory(models.TextChoices):
     HOPS = "hops", "Hops"
     YEAST = "yeast", "Yeast"
     ADJUNCT = "adjunct", "Adjunct"
+    FRUIT_FLAVOR = "fruit_flavor", "Fruit/Flavor"
     # Chemicals
     CLEANER = "cleaner", "Cleaner"
     SANITIZER = "sanitizer", "Sanitizer"
@@ -39,6 +40,7 @@ SUBCATEGORY_MAP: dict[str, list[tuple[str, str]]] = {
         (Subcategory.HOPS, Subcategory.HOPS.label),
         (Subcategory.YEAST, Subcategory.YEAST.label),
         (Subcategory.ADJUNCT, Subcategory.ADJUNCT.label),
+        (Subcategory.FRUIT_FLAVOR, Subcategory.FRUIT_FLAVOR.label),
     ],
     Category.CHEMICAL: [
         (Subcategory.CLEANER, Subcategory.CLEANER.label),
@@ -68,6 +70,21 @@ class UnitOfMeasure(models.TextChoices):
     PACK = "pack", "pack"
 
 
+class Recipe(models.Model):
+    """A recipe that ingredients can be earmarked for."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=200, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class InventoryItem(models.Model):
     """A single inventory item tracked by the brewery."""
 
@@ -84,6 +101,13 @@ class InventoryItem(models.Model):
         max_digits=10, decimal_places=2, default=Decimal("0.00")
     )
     notes = models.TextField(blank=True, default="")
+    earmarked_for = models.ForeignKey(
+        "Recipe",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="earmarked_items",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

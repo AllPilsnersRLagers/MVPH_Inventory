@@ -2,10 +2,13 @@
 
 from decimal import Decimal
 
+import pytest
+
 from inventory.models import (
     SUBCATEGORY_MAP,
     Category,
     InventoryItem,
+    Recipe,
     Subcategory,
     UnitOfMeasure,
 )
@@ -65,7 +68,7 @@ class TestSubcategoryMap:
 
     def test_ingredient_subcategories(self) -> None:
         values = [v for v, _ in SUBCATEGORY_MAP[Category.INGREDIENT]]
-        assert set(values) == {"malt", "hops", "yeast", "adjunct"}
+        assert set(values) == {"malt", "hops", "yeast", "adjunct", "fruit_flavor"}
 
     def test_chemical_subcategories(self) -> None:
         values = [v for v, _ in SUBCATEGORY_MAP[Category.CHEMICAL]]
@@ -74,3 +77,52 @@ class TestSubcategoryMap:
     def test_finished_good_subcategories(self) -> None:
         values = [v for v, _ in SUBCATEGORY_MAP[Category.FINISHED_GOOD]]
         assert set(values) == {"keg", "can", "bottle", "case"}
+
+
+class TestRecipe:
+    """Tests for the Recipe model."""
+
+    def test_str(self, pale_ale_recipe: Recipe) -> None:
+        assert str(pale_ale_recipe) == "Test Pale Ale"
+
+    def test_timestamps(self, pale_ale_recipe: Recipe) -> None:
+        assert pale_ale_recipe.created_at is not None
+        assert pale_ale_recipe.updated_at is not None
+
+    def test_ordering(self, db: None) -> None:
+        # Clear seeded recipes from migration
+        Recipe.objects.all().delete()
+        Recipe.objects.create(name="Stout")
+        Recipe.objects.create(name="IPA")
+        names = list(Recipe.objects.values_list("name", flat=True))
+        assert names == ["IPA", "Stout"]
+
+    def test_unique_name(self, pale_ale_recipe: Recipe) -> None:
+        from django.db import IntegrityError
+
+        with pytest.raises(IntegrityError):
+            Recipe.objects.create(name="Test Pale Ale")
+
+
+class TestEarmarkedFor:
+    """Tests for InventoryItem.earmarked_for relationship."""
+
+    def test_earmarked_item(
+        self, earmarked_item: InventoryItem, pale_ale_recipe: Recipe
+    ) -> None:
+        assert earmarked_item.earmarked_for == pale_ale_recipe
+
+    def test_set_null_on_recipe_delete(
+        self, earmarked_item: InventoryItem, pale_ale_recipe: Recipe
+    ) -> None:
+        pale_ale_recipe.delete()
+        earmarked_item.refresh_from_db()
+        assert earmarked_item.earmarked_for is None
+
+    def test_reverse_relation(
+        self, earmarked_item: InventoryItem, pale_ale_recipe: Recipe
+    ) -> None:
+        assert earmarked_item in pale_ale_recipe.earmarked_items.all()
+
+    def test_nullable(self, hop_item: InventoryItem) -> None:
+        assert hop_item.earmarked_for is None

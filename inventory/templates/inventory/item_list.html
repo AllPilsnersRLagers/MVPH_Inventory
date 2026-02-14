@@ -33,12 +33,26 @@
          name="search"
          placeholder="Search items..."
          value="{{ search_query }}"
-         hx-get="{% url 'inventory:item_list' %}{% if current_category %}?category={{ current_category }}{% endif %}"
+         hx-get="{% url 'inventory:item_list' %}{% if current_category %}?category={{ current_category }}{% if current_subcategory %}&subcategory={{ current_subcategory }}{% endif %}{% endif %}"
          hx-trigger="keyup changed delay:300ms"
          hx-target="#item-table-wrapper"
          hx-include="this"
          class="search-input">
 </div>
+
+{% if sub_tabs %}
+<div id="sub-tabs" class="sub-tabs" role="tablist">
+  {% for tab in sub_tabs %}
+  <a href="{{ tab.url }}"
+     class="sub-tab {% if tab.active %}active{% endif %}"
+     hx-get="{{ tab.url }}"
+     hx-target="#item-table-wrapper"
+     hx-push-url="true">{{ tab.label }}</a>
+  {% endfor %}
+</div>
+{% else %}
+<div id="sub-tabs"></div>
+{% endif %}
 
 <div id="item-table-wrapper">
   {% include "inventory/partials/item_table.html" %}

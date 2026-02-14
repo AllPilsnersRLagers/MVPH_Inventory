@@ -22,4 +22,10 @@ urlpatterns = [
         views.subcategory_options,
         name="subcategory_options",
     ),
+    # Recipe management
+    path("recipes/", views.recipe_list, name="recipe_list"),
+    path("recipes/create/", views.recipe_create, name="recipe_create"),
+    path("recipes/<uuid:pk>/edit/", views.recipe_update, name="recipe_update"),
+    path("recipes/<uuid:pk>/delete/", views.recipe_delete, name="recipe_delete"),
+    path("recipes/quick-add/", views.recipe_quick_add, name="recipe_quick_add"),
 ]

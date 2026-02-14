@@ -4,6 +4,7 @@
   <td>{{ item.subcategory_display }}</td>
   <td class="qty">{{ item.quantity_on_hand }}</td>
   <td>{{ item.get_unit_of_measure_display }}</td>
+  {% if show_earmarked_column %}<td>{% if item.earmarked_for %}{{ item.earmarked_for.name }}{% else %}—{% endif %}</td>{% endif %}
   <td>
     {% if item.is_low_stock %}
       <span class="badge badge-warning">Low</span>

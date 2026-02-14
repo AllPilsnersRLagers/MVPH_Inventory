@@ -11,6 +11,7 @@
       </th>
       {% endfor %}
       <th>Unit</th>
+      {% if show_earmarked_column %}<th>Earmarked For</th>{% endif %}
       <th>Status</th>
       <th>Actions</th>
     </tr>
@@ -47,3 +48,17 @@
      hx-target="#item-table-wrapper"
      hx-push-url="true">Finished Goods</a>
 </div>
+
+{% if sub_tabs %}
+<div id="sub-tabs" class="sub-tabs" role="tablist" hx-swap-oob="true">
+  {% for tab in sub_tabs %}
+  <a href="{{ tab.url }}"
+     class="sub-tab {% if tab.active %}active{% endif %}"
+     hx-get="{{ tab.url }}"
+     hx-target="#item-table-wrapper"
+     hx-push-url="true">{{ tab.label }}</a>
+  {% endfor %}
+</div>
+{% else %}
+<div id="sub-tabs" hx-swap-oob="true"></div>
+{% endif %}

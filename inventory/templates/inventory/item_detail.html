@@ -19,6 +19,11 @@
     <dt>Subcategory</dt>
     <dd>{{ item.subcategory_display }}</dd>
 
+    {% if item.category == "ingredient" %}
+    <dt>Earmarked For</dt>
+    <dd>{% if item.earmarked_for %}{{ item.earmarked_for.name }}{% else %}None{% endif %}</dd>
+    {% endif %}
+
     <dt>Quantity on Hand</dt>
     <dd>
       {{ item.quantity_on_hand }} {{ item.get_unit_of_measure_display }}

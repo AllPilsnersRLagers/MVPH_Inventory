@@ -2,8 +2,19 @@
 
 from decimal import Decimal
 
-from inventory.forms import InventoryItemForm, StockAdjustmentForm
-from inventory.models import Category, InventoryItem, Subcategory, UnitOfMeasure
+from inventory.forms import (
+    InventoryItemForm,
+    QuickRecipeForm,
+    RecipeForm,
+    StockAdjustmentForm,
+)
+from inventory.models import (
+    Category,
+    InventoryItem,
+    Recipe,
+    Subcategory,
+    UnitOfMeasure,
+)
 
 
 class TestInventoryItemForm:
@@ -35,6 +46,46 @@ class TestInventoryItemForm:
         choice_values = [v for v, _ in form.fields["subcategory"].choices]  # type: ignore[attr-defined]
         assert "cleaner" in choice_values
         assert "hops" not in choice_values
+
+    def test_earmarked_for_field_exists(self, db: None) -> None:
+        form = InventoryItemForm()
+        assert "earmarked_for" in form.fields
+
+    def test_earmarked_for_accepts_recipe(
+        self, db: None, pale_ale_recipe: Recipe
+    ) -> None:
+        data = {
+            "name": "Cascade Hops",
+            "category": Category.INGREDIENT,
+            "subcategory": Subcategory.HOPS,
+            "quantity_on_hand": "5.00",
+            "unit_of_measure": UnitOfMeasure.OZ,
+            "reorder_point": "2.00",
+            "description": "",
+            "notes": "",
+            "earmarked_for": str(pale_ale_recipe.pk),
+        }
+        form = InventoryItemForm(data=data)
+        assert form.is_valid(), form.errors
+        item = form.save()
+        assert item.earmarked_for == pale_ale_recipe
+
+    def test_earmarked_for_accepts_empty(self, db: None) -> None:
+        data = {
+            "name": "Cascade Hops",
+            "category": Category.INGREDIENT,
+            "subcategory": Subcategory.HOPS,
+            "quantity_on_hand": "5.00",
+            "unit_of_measure": UnitOfMeasure.OZ,
+            "reorder_point": "2.00",
+            "description": "",
+            "notes": "",
+            "earmarked_for": "",
+        }
+        form = InventoryItemForm(data=data)
+        assert form.is_valid(), form.errors
+        item = form.save()
+        assert item.earmarked_for is None
 
 
 class TestStockAdjustmentForm:
@@ -73,3 +124,37 @@ class TestStockAdjustmentForm:
         form = StockAdjustmentForm(data={})
         assert not form.is_valid()
         assert "adjustment" in form.errors
+
+
+class TestRecipeForm:
+    """Tests for the RecipeForm."""
+
+    def test_valid_form(self, db: None) -> None:
+        form = RecipeForm(data={"name": "New IPA"})
+        assert form.is_valid(), form.errors
+
+    def test_missing_name(self, db: None) -> None:
+        form = RecipeForm(data={"name": ""})
+        assert not form.is_valid()
+        assert "name" in form.errors
+
+    def test_creates_recipe(self, db: None) -> None:
+        form = RecipeForm(data={"name": "New IPA"})
+        form.is_valid()
+        recipe = form.save()
+        assert Recipe.objects.filter(pk=recipe.pk).exists()
+
+
+class TestQuickRecipeForm:
+    """Tests for the QuickRecipeForm."""
+
+    def test_valid_form(self, db: None) -> None:
+        form = QuickRecipeForm(data={"name": "Quick Stout"})
+        assert form.is_valid(), form.errors
+
+    def test_creates_recipe(self, db: None) -> None:
+        form = QuickRecipeForm(data={"name": "Quick Stout"})
+        form.is_valid()
+        recipe = form.save()
+        assert Recipe.objects.filter(name="Quick Stout").exists()
+        assert recipe.name == "Quick Stout"

@@ -11,7 +11,10 @@
   <header>
     <nav>
       <a href="{% url 'inventory:item_list' %}" class="logo">MVPH Inventory</a>
-      <a href="{% url 'inventory:item_create' %}" class="btn btn-primary">+ New Item</a>
+      <div class="nav-links">
+        <a href="{% url 'inventory:recipe_list' %}" class="nav-link">Recipes</a>
+        <a href="{% url 'inventory:item_create' %}" class="btn btn-primary">+ New Item</a>
+      </div>
     </nav>
   </header>
   <main>

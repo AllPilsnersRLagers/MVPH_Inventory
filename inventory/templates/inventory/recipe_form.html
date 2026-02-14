@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{% if recipe %}Edit {{ recipe.name }}{% else %}New Recipe{% endif %} — MVPH Inventory{% endblock %}
+
+{% block content %}
+<h1>{% if recipe %}Edit {{ recipe.name }}{% else %}New Recipe{% endif %}</h1>
+
+<form method="post" class="item-form">
+  {% csrf_token %}
+
+  {% for field in form %}
+  <div class="form-group {% if field.errors %}has-error{% endif %}">
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+    {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+  </div>
+  {% endfor %}
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">{% if recipe %}Save Changes{% else %}Create Recipe{% endif %}</button>
+    <a href="{% url 'inventory:recipe_list' %}" class="btn">Cancel</a>
+  </div>
+</form>
+{% endblock %}

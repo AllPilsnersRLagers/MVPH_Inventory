@@ -1,0 +1,16 @@
+<div class="inline-form quick-recipe-form" id="quick-recipe-inline">
+  <input type="text" name="name" placeholder="New recipe name..."
+         id="id_quick_recipe_name" form="" autofocus>
+  <button type="button"
+          hx-post="{% url 'inventory:recipe_quick_add' %}"
+          hx-include="#id_quick_recipe_name"
+          hx-target="#earmarked-wrapper"
+          hx-swap="outerHTML"
+          class="btn btn-sm btn-primary">Add</button>
+  <button type="button"
+          onclick="this.closest('.quick-recipe-form').remove()"
+          class="btn btn-sm">Cancel</button>
+  {% if form.errors %}
+  <span class="error-text">{{ form.name.errors.0 }}</span>
+  {% endif %}
+</div>

@@ -1,5 +1,5 @@
 <tr id="item-row-{{ item.pk }}" class="adjust-row">
-  <td colspan="7">
+  <td colspan="99">
     <form hx-post="{% url 'inventory:adjust_stock' item.pk %}"
           hx-target="#item-row-{{ item.pk }}"
           hx-swap="outerHTML"
@@ -9,8 +9,9 @@
       {{ form.adjustment }}
       <button type="submit" class="btn btn-sm btn-primary">Apply</button>
       <button type="button"
-              hx-get="{% url 'inventory:item_list' %}"
-              hx-target="#item-table-wrapper"
+              hx-get="{% url 'inventory:adjust_stock' item.pk %}?cancel=1"
+              hx-target="#item-row-{{ item.pk }}"
+              hx-swap="outerHTML"
               class="btn btn-sm">Cancel</button>
     </form>
   </td>

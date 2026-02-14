@@ -7,7 +7,7 @@ from typing import Any
 
 from django import forms
 
-from .models import SUBCATEGORY_MAP, InventoryItem
+from .models import SUBCATEGORY_MAP, InventoryItem, Recipe
 
 
 class InventoryItemForm(forms.ModelForm):  # type: ignore[type-arg]
@@ -24,6 +24,7 @@ class InventoryItemForm(forms.ModelForm):  # type: ignore[type-arg]
             "unit_of_measure",
             "reorder_point",
             "notes",
+            "earmarked_for",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 3}),
@@ -38,6 +39,29 @@ class InventoryItemForm(forms.ModelForm):  # type: ignore[type-arg]
                 ("", "---------"),
                 *choices,
             ]
+        # earmarked_for is only meaningful for ingredients, but we always
+        # include it in the form and let the template handle visibility
+        self.fields["earmarked_for"].required = False
+        self.fields["earmarked_for"].empty_label = "None (unassigned)"  # type: ignore[attr-defined]
+
+
+class RecipeForm(forms.ModelForm):  # type: ignore[type-arg]
+    """Form for creating and updating recipes."""
+
+    class Meta:
+        model = Recipe
+        fields = ["name"]
+
+
+class QuickRecipeForm(forms.ModelForm):  # type: ignore[type-arg]
+    """Minimal form for quick-adding a recipe from the item form."""
+
+    class Meta:
+        model = Recipe
+        fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "New recipe name..."}),
+        }
 
 
 class StockAdjustmentForm(forms.Form):
@@ -46,6 +70,7 @@ class StockAdjustmentForm(forms.Form):
     adjustment = forms.DecimalField(
         max_digits=10,
         decimal_places=2,
+        widget=forms.NumberInput(attrs={"step": "0.1", "autofocus": True}),
         help_text="Positive to add, negative to subtract.",
     )
 

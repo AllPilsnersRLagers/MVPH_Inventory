@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Recipes — MVPH Inventory{% endblock %}
+
+{% block content %}
+<div class="detail-header">
+  <h1>Recipes</h1>
+  <a href="{% url 'inventory:recipe_create' %}" class="btn btn-primary">+ New Recipe</a>
+</div>
+
+{% if recipes %}
+<table class="item-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Earmarked Items</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for recipe in recipes %}
+    <tr>
+      <td>{{ recipe.name }}</td>
+      <td>{{ recipe.earmarked_items.count }}</td>
+      <td class="actions">
+        <a href="{% url 'inventory:recipe_update' recipe.pk %}" class="btn btn-sm">Edit</a>
+        <a href="{% url 'inventory:recipe_delete' recipe.pk %}" class="btn btn-sm btn-danger">Delete</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty-state">No recipes yet.</p>
+{% endif %}
+{% endblock %}
