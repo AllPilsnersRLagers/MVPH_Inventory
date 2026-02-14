@@ -63,12 +63,31 @@ class TestInventoryItemForm:
             "reorder_point": "2.00",
             "description": "",
             "notes": "",
-            "earmarked_for": str(pale_ale_recipe.pk),
+            "earmarked_for": [str(pale_ale_recipe.pk)],
         }
         form = InventoryItemForm(data=data)
         assert form.is_valid(), form.errors
         item = form.save()
-        assert item.earmarked_for == pale_ale_recipe
+        assert pale_ale_recipe in item.earmarked_for.all()
+
+    def test_earmarked_for_accepts_multiple(self, db: None) -> None:
+        recipe1 = Recipe.objects.create(name="Test IPA")
+        recipe2 = Recipe.objects.create(name="Test Stout")
+        data = {
+            "name": "Cascade Hops",
+            "category": Category.INGREDIENT,
+            "subcategory": Subcategory.HOPS,
+            "quantity_on_hand": "5.00",
+            "unit_of_measure": UnitOfMeasure.OZ,
+            "reorder_point": "2.00",
+            "description": "",
+            "notes": "",
+            "earmarked_for": [str(recipe1.pk), str(recipe2.pk)],
+        }
+        form = InventoryItemForm(data=data)
+        assert form.is_valid(), form.errors
+        item = form.save()
+        assert item.earmarked_for.count() == 2
 
     def test_earmarked_for_accepts_empty(self, db: None) -> None:
         data = {
@@ -80,12 +99,12 @@ class TestInventoryItemForm:
             "reorder_point": "2.00",
             "description": "",
             "notes": "",
-            "earmarked_for": "",
+            "earmarked_for": [],
         }
         form = InventoryItemForm(data=data)
         assert form.is_valid(), form.errors
         item = form.save()
-        assert item.earmarked_for is None
+        assert item.earmarked_for.count() == 0
 
 
 class TestStockAdjustmentForm:

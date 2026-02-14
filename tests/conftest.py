@@ -61,12 +61,13 @@ def pale_ale_recipe(db: None) -> Recipe:
 @pytest.fixture
 def earmarked_item(db: None, pale_ale_recipe: Recipe) -> InventoryItem:
     """An ingredient item earmarked for Pale Ale."""
-    return InventoryItem.objects.create(
+    item = InventoryItem.objects.create(
         name="Cascade Hops (PA)",
         category=Category.INGREDIENT,
         subcategory=Subcategory.HOPS,
         quantity_on_hand=Decimal("5.00"),
         unit_of_measure=UnitOfMeasure.OZ,
         reorder_point=Decimal("1.00"),
-        earmarked_for=pale_ale_recipe,
     )
+    item.earmarked_for.add(pale_ale_recipe)
+    return item

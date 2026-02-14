@@ -33,4 +33,6 @@
 {% else %}
 <p class="empty-state">No recipes yet.</p>
 {% endif %}
+
+<p style="margin-top: 1.5rem;"><a href="{% url 'inventory:item_list' %}">&larr; Back to Inventory</a></p>
 {% endblock %}

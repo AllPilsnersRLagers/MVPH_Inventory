@@ -8,14 +8,15 @@
 <div id="earmarked-wrapper" hx-swap-oob="true">
   {% if show_earmarked %}
   <div class="form-group">
-    <label for="id_earmarked_for">Earmarked for</label>
+    <label>Earmarked for</label>
     <div class="earmarked-field-row">
-      <select name="earmarked_for" id="id_earmarked_for">
-        <option value="">None (unassigned)</option>
+      <ul id="id_earmarked_for">
         {% for recipe in recipes %}
-          <option value="{{ recipe.pk }}">{{ recipe.name }}</option>
+        <li><label><input type="checkbox" name="earmarked_for" value="{{ recipe.pk }}"> {{ recipe.name }}</label></li>
+        {% empty %}
+        <li class="help-text">No recipes yet.</li>
         {% endfor %}
-      </select>
+      </ul>
       <button type="button"
               hx-get="{% url 'inventory:recipe_quick_add' %}"
               hx-target="#quick-recipe-slot"

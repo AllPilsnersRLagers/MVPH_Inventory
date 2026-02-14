@@ -105,24 +105,29 @@ class TestRecipe:
 
 
 class TestEarmarkedFor:
-    """Tests for InventoryItem.earmarked_for relationship."""
+    """Tests for InventoryItem.earmarked_for M2M relationship."""
 
     def test_earmarked_item(
         self, earmarked_item: InventoryItem, pale_ale_recipe: Recipe
     ) -> None:
-        assert earmarked_item.earmarked_for == pale_ale_recipe
+        assert pale_ale_recipe in earmarked_item.earmarked_for.all()
 
-    def test_set_null_on_recipe_delete(
+    def test_recipe_removed_on_delete(
         self, earmarked_item: InventoryItem, pale_ale_recipe: Recipe
     ) -> None:
         pale_ale_recipe.delete()
         earmarked_item.refresh_from_db()
-        assert earmarked_item.earmarked_for is None
+        assert earmarked_item.earmarked_for.count() == 0
 
     def test_reverse_relation(
         self, earmarked_item: InventoryItem, pale_ale_recipe: Recipe
     ) -> None:
-        assert earmarked_item in pale_ale_recipe.earmarked_items.all()
+        assert earmarked_item in pale_ale_recipe.earmarked_items.all()  # type: ignore[attr-defined]
 
-    def test_nullable(self, hop_item: InventoryItem) -> None:
-        assert hop_item.earmarked_for is None
+    def test_empty_by_default(self, hop_item: InventoryItem) -> None:
+        assert hop_item.earmarked_for.count() == 0
+
+    def test_multiple_recipes(self, earmarked_item: InventoryItem, db: None) -> None:
+        stout = Recipe.objects.create(name="Test Stout")
+        earmarked_item.earmarked_for.add(stout)
+        assert earmarked_item.earmarked_for.count() == 2

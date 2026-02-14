@@ -1,0 +1,13 @@
+{# Empty content for quick-recipe-slot (clears the form) #}
+
+{# OOB swap to update the checkbox list with the new recipe selected #}
+<ul id="id_earmarked_for" hx-swap-oob="true">
+  {% for recipe in recipes %}
+  <li>
+    <label>
+      <input type="checkbox" name="earmarked_for" value="{{ recipe.pk }}" {% if recipe.pk in selected %}checked{% endif %}>
+      {{ recipe.name }}
+    </label>
+  </li>
+  {% endfor %}
+</ul>

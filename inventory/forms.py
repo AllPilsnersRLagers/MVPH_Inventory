@@ -42,7 +42,7 @@ class InventoryItemForm(forms.ModelForm):  # type: ignore[type-arg]
         # earmarked_for is only meaningful for ingredients, but we always
         # include it in the form and let the template handle visibility
         self.fields["earmarked_for"].required = False
-        self.fields["earmarked_for"].empty_label = "None (unassigned)"  # type: ignore[attr-defined]
+        self.fields["earmarked_for"].widget = forms.CheckboxSelectMultiple()
 
 
 class RecipeForm(forms.ModelForm):  # type: ignore[type-arg]

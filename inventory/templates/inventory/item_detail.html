@@ -21,7 +21,7 @@
 
     {% if item.category == "ingredient" %}
     <dt>Earmarked For</dt>
-    <dd>{% if item.earmarked_for %}{{ item.earmarked_for.name }}{% else %}None{% endif %}</dd>
+    <dd>{% with recipes=item.earmarked_for.all %}{% if recipes %}{% for r in recipes %}{{ r.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}None{% endif %}{% endwith %}</dd>
     {% endif %}
 
     <dt>Quantity on Hand</dt>

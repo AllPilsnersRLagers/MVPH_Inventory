@@ -17,12 +17,21 @@ class InventoryItemAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         "subcategory",
         "quantity_on_hand",
         "unit_of_measure",
-        "earmarked_for",
+        "earmarked_recipes",
         "is_low_stock",
     ]
-    list_filter = ["category", "subcategory", "earmarked_for"]
+    list_filter = ["category", "subcategory"]
     search_fields = ["name", "description"]
     readonly_fields = ["id", "created_at", "updated_at"]
+    filter_horizontal = ["earmarked_for"]
+
+    @admin.display(description="Earmarked For")
+    def earmarked_recipes(self, obj: InventoryItem) -> str:
+        """Display earmarked recipes as comma-separated list."""
+        recipes = obj.earmarked_for.all()
+        if recipes:
+            return ", ".join(r.name for r in recipes)
+        return "—"
 
 
 @admin.register(Recipe)

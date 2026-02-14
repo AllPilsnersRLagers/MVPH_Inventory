@@ -30,7 +30,7 @@ def _build_sort_url(
 
 def item_list(request: HttpRequest) -> HttpResponse:
     """List all inventory items with optional filtering, search, and sorting."""
-    items = InventoryItem.objects.select_related("earmarked_for").all()
+    items = InventoryItem.objects.prefetch_related("earmarked_for").all()
 
     category = request.GET.get("category", "")
     subcategory = request.GET.get("subcategory", "")
@@ -123,7 +123,11 @@ def item_create(request: HttpRequest) -> HttpResponse:
     else:
         form = InventoryItemForm()
 
-    return render(request, "inventory/item_form.html", {"form": form})
+    return render(
+        request,
+        "inventory/item_form.html",
+        {"form": form, "recipes": Recipe.objects.all()},
+    )
 
 
 def item_detail(request: HttpRequest, pk: UUID) -> HttpResponse:
@@ -144,7 +148,11 @@ def item_update(request: HttpRequest, pk: UUID) -> HttpResponse:
     else:
         form = InventoryItemForm(instance=item)
 
-    return render(request, "inventory/item_form.html", {"form": form, "item": item})
+    return render(
+        request,
+        "inventory/item_form.html",
+        {"form": form, "item": item, "recipes": Recipe.objects.all()},
+    )
 
 
 def item_delete(request: HttpRequest, pk: UUID) -> HttpResponse:
@@ -250,14 +258,17 @@ def recipe_delete(request: HttpRequest, pk: UUID) -> HttpResponse:
 def recipe_quick_add(request: HttpRequest) -> HttpResponse:
     """HTMX endpoint: quick-add a recipe and return updated earmarked_for select."""
     if request.method == "POST":
-        form = QuickRecipeForm(request.POST)
+        # Map recipe_name to name for the form
+        data = {"name": request.POST.get("recipe_name", "")}
+        form = QuickRecipeForm(data)
         if form.is_valid():
             new_recipe = form.save()
             recipes = Recipe.objects.all()
+            # Return OOB swap for checkbox list + empty slot content
             return render(
                 request,
-                "inventory/partials/earmarked_select.html",
-                {"recipes": recipes, "show": True, "selected": new_recipe.pk},
+                "inventory/partials/quick_recipe_success.html",
+                {"recipes": recipes, "selected": [new_recipe.pk]},
             )
         # If invalid, re-show the form with errors
         return render(

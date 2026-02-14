@@ -120,7 +120,7 @@ class TestItemCreateView:
             "reorder_point": "10.00",
             "description": "",
             "notes": "",
-            "earmarked_for": "",
+            "earmarked_for": [],
         }
         resp = client.post("/items/create/", data)
         assert resp.status_code == 302
@@ -162,7 +162,7 @@ class TestItemUpdateView:
             "reorder_point": "2.00",
             "description": "",
             "notes": "",
-            "earmarked_for": "",
+            "earmarked_for": [],
         }
         resp = client.post(f"/items/{hop_item.pk}/edit/", data)
         assert resp.status_code == 302
@@ -280,7 +280,7 @@ class TestRecipeQuickAdd:
         assert resp.status_code == 200
 
     def test_post_creates_recipe(self, client: Client, db: None) -> None:
-        resp = client.post("/recipes/quick-add/", {"name": "Porter"})
+        resp = client.post("/recipes/quick-add/", {"recipe_name": "Porter"})
         assert resp.status_code == 200
         assert Recipe.objects.filter(name="Porter").exists()
         assert b"Porter" in resp.content

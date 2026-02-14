@@ -1,11 +1,11 @@
 <div class="inline-form quick-recipe-form" id="quick-recipe-inline">
-  <input type="text" name="name" placeholder="New recipe name..."
-         id="id_quick_recipe_name" form="" autofocus>
+  <input type="text" name="recipe_name" placeholder="New recipe name..."
+         id="id_quick_recipe_name" autofocus>
   <button type="button"
           hx-post="{% url 'inventory:recipe_quick_add' %}"
           hx-include="#id_quick_recipe_name"
-          hx-target="#earmarked-wrapper"
-          hx-swap="outerHTML"
+          hx-target="#quick-recipe-slot"
+          hx-swap="innerHTML"
           class="btn btn-sm btn-primary">Add</button>
   <button type="button"
           onclick="this.closest('.quick-recipe-form').remove()"

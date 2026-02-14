@@ -101,12 +101,12 @@ class InventoryItem(models.Model):
         max_digits=10, decimal_places=2, default=Decimal("0.00")
     )
     notes = models.TextField(blank=True, default="")
-    earmarked_for = models.ForeignKey(
-        "Recipe",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="earmarked_items",
+    earmarked_for: models.ManyToManyField[Recipe, InventoryItem] = (
+        models.ManyToManyField(
+            "Recipe",
+            blank=True,
+            related_name="earmarked_items",
+        )
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
