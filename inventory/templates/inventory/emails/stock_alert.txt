@@ -1,0 +1,26 @@
+MVPH Inventory Stock Alert
+===========================
+
+Hi {{ user.first_name|default:user.username }},
+
+During your session, {{ total_count }} item(s) entered low stock status:
+
+{% if reorder_alerts %}
+REORDER NOW (at or below reorder point):
+{% for alert in reorder_alerts %}
+- {{ alert.item_name }}
+  Quantity: {{ alert.quantity }} {{ alert.unit }} (Reorder point: {{ alert.reorder_point }} {{ alert.unit }})
+{% endfor %}
+{% endif %}
+{% if low_alerts %}
+LOW STOCK (approaching reorder point):
+{% for alert in low_alerts %}
+- {{ alert.item_name }}
+  Quantity: {{ alert.quantity }} {{ alert.unit }} (Reorder point: {{ alert.reorder_point }} {{ alert.unit }})
+{% endfor %}
+{% endif %}
+
+Log in to MVPH Inventory to review and restock.
+
+---
+This is an automated message from MVPH Inventory.

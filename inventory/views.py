@@ -1,7 +1,9 @@
 """Views for inventory management."""
 
+import logging
 from uuid import UUID
 
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -22,6 +24,14 @@ from .models import (
     capture_item_state,
     log_item_changes,
 )
+from .notifications import (
+    clear_pending_alerts,
+    get_pending_alerts,
+    queue_stock_alert,
+    send_stock_alert_email,
+)
+
+logger = logging.getLogger(__name__)
 
 SORTABLE_COLUMNS = [
     ("name", "Name"),
@@ -170,6 +180,7 @@ def item_update(request: HttpRequest, pk: UUID) -> HttpResponse:
 
     if request.method == "POST":
         old_state = capture_item_state(item)
+        old_stock_status = item.stock_status
         form = InventoryItemForm(request.POST, instance=item)
         if form.is_valid():
             item = form.save(commit=False)
@@ -177,9 +188,12 @@ def item_update(request: HttpRequest, pk: UUID) -> HttpResponse:
             item.save()
             form.save_m2m()
             new_state = capture_item_state(item)
+            new_stock_status = item.stock_status
             log_item_changes(
                 item, request.user, ActionType.UPDATED, old_state, new_state
             )
+            if old_stock_status != new_stock_status:
+                queue_stock_alert(request, item, old_stock_status, new_stock_status)
             return redirect("inventory:item_detail", pk=item.pk)
     else:
         form = InventoryItemForm(instance=item)
@@ -235,11 +249,15 @@ def adjust_stock(request: HttpRequest, pk: UUID) -> HttpResponse:
         form = StockAdjustmentForm(request.POST)
         if form.is_valid():
             old_state = capture_item_state(item)
+            old_stock_status = item.stock_status
             form.apply_to(item, user=request.user)
             new_state = capture_item_state(item)
+            new_stock_status = item.stock_status
             log_item_changes(
                 item, request.user, ActionType.STOCK_ADJUSTED, old_state, new_state
             )
+            if old_stock_status != new_stock_status:
+                queue_stock_alert(request, item, old_stock_status, new_stock_status)
             return render(request, "inventory/partials/item_row.html", row_context)
     else:
         form = StockAdjustmentForm()
@@ -364,3 +382,22 @@ def recipe_quick_add(request: HttpRequest) -> HttpResponse:
         "inventory/partials/quick_recipe_form.html",
         {"form": form},
     )
+
+
+def logout_with_notifications(request: HttpRequest) -> HttpResponse:
+    """Custom logout view that sends pending stock alerts before logging out.
+
+    Collects any stock status change notifications queued during the session,
+    sends them as a batched email to the user (if they have an email address),
+    then logs the user out and redirects to the login page.
+    """
+    if request.user.is_authenticated:
+        alerts = get_pending_alerts(request)
+        if alerts:
+            try:
+                send_stock_alert_email(request.user, alerts)
+            except Exception:
+                logger.exception("Failed to send stock alert email")
+            clear_pending_alerts(request)
+    logout(request)
+    return redirect("login")

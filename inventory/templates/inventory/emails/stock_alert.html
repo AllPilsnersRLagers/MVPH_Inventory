@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    h1 { color: #2c3e50; border-bottom: 2px solid #dc3545; padding-bottom: 10px; }
+    .alert-section { margin: 20px 0; }
+    .alert-section h2 { margin-bottom: 10px; }
+    .reorder { background: #f8d7da; border-left: 4px solid #dc3545; padding: 10px; margin: 10px 0; }
+    .low { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 10px 0; }
+    .item-name { font-weight: bold; }
+    .item-details { color: #666; font-size: 0.9em; }
+    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #999; font-size: 0.8em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MVPH Inventory Stock Alert</h1>
+
+    <p>Hi {{ user.first_name|default:user.username }},</p>
+
+    <p>During your session, <strong>{{ total_count }} item(s)</strong> entered low stock status:</p>
+
+    {% if reorder_alerts %}
+    <div class="alert-section">
+      <h2 style="color: #dc3545;">Reorder Now</h2>
+      <p>These items are at or below their reorder point:</p>
+      {% for alert in reorder_alerts %}
+      <div class="reorder">
+        <div class="item-name">{{ alert.item_name }}</div>
+        <div class="item-details">
+          Quantity: {{ alert.quantity }} {{ alert.unit }} | Reorder point: {{ alert.reorder_point }} {{ alert.unit }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if low_alerts %}
+    <div class="alert-section">
+      <h2 style="color: #ffc107;">Low Stock</h2>
+      <p>These items are approaching their reorder point:</p>
+      {% for alert in low_alerts %}
+      <div class="low">
+        <div class="item-name">{{ alert.item_name }}</div>
+        <div class="item-details">
+          Quantity: {{ alert.quantity }} {{ alert.unit }} | Reorder point: {{ alert.reorder_point }} {{ alert.unit }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <p>Log in to MVPH Inventory to review and restock.</p>
+
+    <div class="footer">
+      This is an automated message from MVPH Inventory.
+    </div>
+  </div>
+</body>
+</html>
