@@ -87,6 +87,7 @@ h1 { margin-bottom: 1rem; font-size: 1.75rem; }
 .item-table .qty { font-variant-numeric: tabular-nums; }
 .item-table .actions { white-space: nowrap; display: flex; gap: 0.25rem; }
 tr.low-stock { background: var(--color-warning-bg); }
+tr.reorder-stock { background: #f8d7da; }
 
 /* === Badges === */
 .badge {
@@ -95,6 +96,7 @@ tr.low-stock { background: var(--color-warning-bg); }
 }
 .badge-warning { background: var(--color-warning-bg); color: var(--color-warning-text); }
 .badge-ok { background: var(--color-ok-bg); color: var(--color-ok-text); }
+.badge-danger { background: #f8d7da; color: #842029; }
 
 /* === Inline stock adjust === */
 .adjust-row td { background: var(--color-bg); }

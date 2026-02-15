@@ -27,7 +27,13 @@
     <dt>Quantity on Hand</dt>
     <dd>
       {{ item.quantity_on_hand }} {{ item.get_unit_of_measure_display }}
-      {% if item.is_low_stock %}<span class="badge badge-warning">Low Stock</span>{% endif %}
+      {% if item.stock_status == "reorder" %}
+        <span class="badge badge-danger">Reorder</span>
+      {% elif item.stock_status == "low" %}
+        <span class="badge badge-warning">Low</span>
+      {% else %}
+        <span class="badge badge-ok">OK</span>
+      {% endif %}
     </dd>
 
     <dt>Reorder Point</dt>

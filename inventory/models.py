@@ -168,6 +168,17 @@ class InventoryItem(models.Model):
         return self.quantity_on_hand <= self.reorder_point
 
     @property
+    def stock_status(self) -> str:
+        """Return stock status: 'reorder', 'low', or 'ok'."""
+        if self.quantity_on_hand <= self.reorder_point:
+            return "reorder"
+        # Within 10% of reorder point
+        threshold = self.reorder_point * Decimal("1.10")
+        if self.quantity_on_hand <= threshold:
+            return "low"
+        return "ok"
+
+    @property
     def subcategory_display(self) -> str:
         """Return human-readable subcategory label."""
         return Subcategory(self.subcategory).label
