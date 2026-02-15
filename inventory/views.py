@@ -13,7 +13,15 @@ from .forms import (
     RecipeIngredientFormSet,
     StockAdjustmentForm,
 )
-from .models import SUBCATEGORY_MAP, Category, InventoryItem, Recipe
+from .models import (
+    SUBCATEGORY_MAP,
+    ActionType,
+    Category,
+    InventoryItem,
+    Recipe,
+    capture_item_state,
+    log_item_changes,
+)
 
 SORTABLE_COLUMNS = [
     ("name", "Name"),
@@ -136,6 +144,7 @@ def item_create(request: HttpRequest) -> HttpResponse:
             item.updated_by = request.user
             item.save()
             form.save_m2m()
+            log_item_changes(item, request.user, ActionType.CREATED)
             return redirect("inventory:item_list")
     else:
         form = InventoryItemForm()
@@ -160,12 +169,17 @@ def item_update(request: HttpRequest, pk: UUID) -> HttpResponse:
     item = get_object_or_404(InventoryItem, pk=pk)
 
     if request.method == "POST":
+        old_state = capture_item_state(item)
         form = InventoryItemForm(request.POST, instance=item)
         if form.is_valid():
             item = form.save(commit=False)
             item.updated_by = request.user
             item.save()
             form.save_m2m()
+            new_state = capture_item_state(item)
+            log_item_changes(
+                item, request.user, ActionType.UPDATED, old_state, new_state
+            )
             return redirect("inventory:item_detail", pk=item.pk)
     else:
         form = InventoryItemForm(instance=item)
@@ -190,6 +204,18 @@ def item_delete(request: HttpRequest, pk: UUID) -> HttpResponse:
 
 
 @login_required
+def item_history(request: HttpRequest, pk: UUID) -> HttpResponse:
+    """HTMX endpoint: return change history for an item."""
+    item = get_object_or_404(InventoryItem, pk=pk)
+    logs = item.change_logs.select_related("user")[:50]
+    return render(
+        request,
+        "inventory/partials/item_history.html",
+        {"item": item, "logs": logs},
+    )
+
+
+@login_required
 def adjust_stock(request: HttpRequest, pk: UUID) -> HttpResponse:
     """HTMX endpoint: adjust stock quantity inline."""
     item = get_object_or_404(InventoryItem, pk=pk)
@@ -208,7 +234,12 @@ def adjust_stock(request: HttpRequest, pk: UUID) -> HttpResponse:
     if request.method == "POST":
         form = StockAdjustmentForm(request.POST)
         if form.is_valid():
+            old_state = capture_item_state(item)
             form.apply_to(item, user=request.user)
+            new_state = capture_item_state(item)
+            log_item_changes(
+                item, request.user, ActionType.STOCK_ADJUSTED, old_state, new_state
+            )
             return render(request, "inventory/partials/item_row.html", row_context)
     else:
         form = StockAdjustmentForm()

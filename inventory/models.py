@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from decimal import Decimal
+from typing import Any
 
 from django.conf import settings
 from django.db import models
@@ -208,3 +209,114 @@ class RecipeIngredient(models.Model):
 
     def __str__(self) -> str:
         return f"{self.ingredient.name}: {self.amount} {self.unit}"
+
+
+class ActionType(models.TextChoices):
+    """Types of actions that can be logged."""
+
+    CREATED = "created", "Created"
+    UPDATED = "updated", "Updated"
+    STOCK_ADJUSTED = "stock_adjusted", "Stock Adjusted"
+
+
+class ItemChangeLog(models.Model):
+    """Audit log for changes to inventory items."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    item = models.ForeignKey(
+        InventoryItem,
+        on_delete=models.CASCADE,
+        related_name="change_logs",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="item_changes",
+    )
+    action = models.CharField(max_length=20, choices=ActionType.choices)
+    field_name = models.CharField(max_length=50, blank=True, default="")
+    old_value = models.TextField(blank=True, default="")
+    new_value = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["item", "-created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        if self.field_name:
+            return f"{self.action}: {self.field_name} changed"
+        return f"{self.action}"
+
+
+# Fields to track for change logging
+TRACKED_FIELDS = [
+    "name",
+    "category",
+    "subcategory",
+    "description",
+    "quantity_on_hand",
+    "unit_of_measure",
+    "reorder_point",
+    "notes",
+]
+
+
+def capture_item_state(item: InventoryItem) -> dict[str, str]:
+    """Capture the current state of tracked fields as strings."""
+    state: dict[str, str] = {}
+    for field in TRACKED_FIELDS:
+        value = getattr(item, field)
+        state[field] = str(value) if value is not None else ""
+    # Handle M2M separately - must be saved first
+    if item.pk:
+        recipes = list(item.earmarked_for.values_list("name", flat=True))
+        state["earmarked_for"] = ", ".join(sorted(recipes)) if recipes else ""
+    else:
+        state["earmarked_for"] = ""
+    return state
+
+
+def log_item_changes(
+    item: InventoryItem,
+    user: Any,
+    action: str,
+    old_state: dict[str, str] | None = None,
+    new_state: dict[str, str] | None = None,
+) -> list[ItemChangeLog]:
+    """Create change log entries for an item.
+
+    For 'created' action: Creates a single log entry with no field details.
+    For 'updated'/'stock_adjusted': Creates one entry per changed field.
+    """
+    logs: list[ItemChangeLog] = []
+
+    if action == ActionType.CREATED:
+        logs.append(
+            ItemChangeLog.objects.create(
+                item=item,
+                user=user,
+                action=action,
+            )
+        )
+    elif old_state and new_state:
+        for field in [*TRACKED_FIELDS, "earmarked_for"]:
+            old_val = old_state.get(field, "")
+            new_val = new_state.get(field, "")
+            if old_val != new_val:
+                logs.append(
+                    ItemChangeLog.objects.create(
+                        item=item,
+                        user=user,
+                        action=action,
+                        field_name=field,
+                        old_value=old_val,
+                        new_value=new_val,
+                    )
+                )
+
+    return logs

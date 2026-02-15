@@ -57,5 +57,15 @@
   </dl>
 </div>
 
+<div class="history-section">
+  <button
+    class="btn"
+    hx-get="{% url 'inventory:item_history' item.pk %}"
+    hx-target="#history-content"
+    hx-swap="innerHTML"
+  >Show History</button>
+  <div id="history-content"></div>
+</div>
+
 <a href="{% url 'inventory:item_list' %}">&larr; Back to list</a>
 {% endblock %}

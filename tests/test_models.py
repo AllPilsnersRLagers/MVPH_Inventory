@@ -6,8 +6,10 @@ import pytest
 
 from inventory.models import (
     SUBCATEGORY_MAP,
+    ActionType,
     Category,
     InventoryItem,
+    ItemChangeLog,
     Recipe,
     Subcategory,
     UnitOfMeasure,
@@ -131,3 +133,47 @@ class TestEarmarkedFor:
         stout = Recipe.objects.create(name="Test Stout")
         earmarked_item.earmarked_for.add(stout)
         assert earmarked_item.earmarked_for.count() == 2
+
+
+class TestItemChangeLog:
+    """Tests for the ItemChangeLog model."""
+
+    def test_str_with_field(self, hop_item: InventoryItem) -> None:
+        log = ItemChangeLog.objects.create(
+            item=hop_item,
+            action=ActionType.UPDATED,
+            field_name="quantity_on_hand",
+            old_value="10.00",
+            new_value="15.00",
+        )
+        assert str(log) == "updated: quantity_on_hand changed"
+
+    def test_str_without_field(self, hop_item: InventoryItem) -> None:
+        log = ItemChangeLog.objects.create(
+            item=hop_item,
+            action=ActionType.CREATED,
+        )
+        assert str(log) == "created"
+
+    def test_cascade_delete(self, hop_item: InventoryItem) -> None:
+        ItemChangeLog.objects.create(
+            item=hop_item,
+            action=ActionType.CREATED,
+        )
+        assert ItemChangeLog.objects.count() == 1
+        hop_item.delete()
+        assert ItemChangeLog.objects.count() == 0
+
+    def test_ordering(self, hop_item: InventoryItem) -> None:
+        log1 = ItemChangeLog.objects.create(
+            item=hop_item,
+            action=ActionType.CREATED,
+        )
+        log2 = ItemChangeLog.objects.create(
+            item=hop_item,
+            action=ActionType.UPDATED,
+            field_name="name",
+        )
+        logs = list(ItemChangeLog.objects.all())
+        assert logs[0] == log2
+        assert logs[1] == log1

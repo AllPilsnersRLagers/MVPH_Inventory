@@ -5,8 +5,10 @@ from decimal import Decimal
 from django.test import Client
 
 from inventory.models import (
+    ActionType,
     Category,
     InventoryItem,
+    ItemChangeLog,
     Recipe,
     Subcategory,
     UnitOfMeasure,
@@ -374,3 +376,82 @@ class TestEarmarkedColumnVisibility:
     ) -> None:
         resp = authenticated_client.get("/?category=ingredient")
         assert b"Test Pale Ale" in resp.content
+
+
+class TestItemHistoryView:
+    """Tests for the item_history HTMX endpoint."""
+
+    def test_history_returns_partial(
+        self, authenticated_client: Client, hop_item: InventoryItem
+    ) -> None:
+        ItemChangeLog.objects.create(
+            item=hop_item,
+            action=ActionType.CREATED,
+        )
+        resp = authenticated_client.get(f"/items/{hop_item.pk}/history/")
+        assert resp.status_code == 200
+        assert b"Created" in resp.content
+
+    def test_history_empty(
+        self, authenticated_client: Client, hop_item: InventoryItem
+    ) -> None:
+        resp = authenticated_client.get(f"/items/{hop_item.pk}/history/")
+        assert resp.status_code == 200
+        assert b"No change history" in resp.content
+
+
+class TestChangeLogging:
+    """Tests for automatic change logging in views."""
+
+    def test_create_logs_created(self, authenticated_client: Client, db: None) -> None:
+        data = {
+            "name": "Test Malt",
+            "category": Category.INGREDIENT,
+            "subcategory": Subcategory.MALT,
+            "quantity_on_hand": "50.00",
+            "unit_of_measure": UnitOfMeasure.LB,
+            "reorder_point": "10.00",
+            "description": "",
+            "notes": "",
+            "earmarked_for": [],
+        }
+        authenticated_client.post("/items/create/", data)
+        item = InventoryItem.objects.get(name="Test Malt")
+        logs = ItemChangeLog.objects.filter(item=item)
+        assert logs.count() == 1
+        assert logs[0].action == ActionType.CREATED
+
+    def test_update_logs_changes(
+        self, authenticated_client: Client, hop_item: InventoryItem
+    ) -> None:
+        data = {
+            "name": "Updated Hops",
+            "category": Category.INGREDIENT,
+            "subcategory": Subcategory.HOPS,
+            "quantity_on_hand": "10.00",
+            "unit_of_measure": UnitOfMeasure.OZ,
+            "reorder_point": "2.00",
+            "description": "",
+            "notes": "",
+            "earmarked_for": [],
+        }
+        authenticated_client.post(f"/items/{hop_item.pk}/edit/", data)
+        logs = ItemChangeLog.objects.filter(item=hop_item, action=ActionType.UPDATED)
+        assert logs.count() == 1
+        assert logs[0].field_name == "name"
+        assert logs[0].old_value == "Cascade Hops"
+        assert logs[0].new_value == "Updated Hops"
+
+    def test_adjust_stock_logs_change(
+        self, authenticated_client: Client, hop_item: InventoryItem
+    ) -> None:
+        authenticated_client.post(
+            f"/items/{hop_item.pk}/adjust-stock/", {"adjustment": "5.00"}
+        )
+        logs = ItemChangeLog.objects.filter(
+            item=hop_item, action=ActionType.STOCK_ADJUSTED
+        )
+        assert logs.count() == 1
+        assert logs[0].field_name == "quantity_on_hand"
+        assert logs[0].old_value == "10.00"
+        assert logs[0].new_value == "15.00"

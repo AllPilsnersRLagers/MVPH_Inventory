@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from django import forms
-
 
 from .models import (
     SUBCATEGORY_MAP,
