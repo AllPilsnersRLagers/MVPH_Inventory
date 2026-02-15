@@ -94,9 +94,9 @@ tr.reorder-stock { background: #f8d7da; }
   display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px;
   font-size: 0.8rem; font-weight: 600;
 }
-.badge-warning { background: var(--color-warning-bg); color: var(--color-warning-text); }
+.badge-warning { background: transparent; color: var(--color-warning-text); border: 1px solid var(--color-warning-text); }
 .badge-ok { background: var(--color-ok-bg); color: var(--color-ok-text); }
-.badge-danger { background: #f8d7da; color: #842029; }
+.badge-danger { background: transparent; color: #842029; border: 1px solid #842029; }
 
 /* === Inline stock adjust === */
 .adjust-row td { background: var(--color-bg); }
