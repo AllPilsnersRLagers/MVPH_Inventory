@@ -205,6 +205,9 @@ tr.reorder-stock { background: #f8d7da; }
 /* === User Info === */
 .user-info { color: var(--color-muted); font-size: 1.125rem; }
 
+/* === Back Link === */
+.back-link { display: inline-block; padding: 0.75rem 0; }
+
 /* === History Section === */
 .history-section { margin-top: 1.5rem; }
 .history-table {
