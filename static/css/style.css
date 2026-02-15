@@ -140,6 +140,50 @@ tr.low-stock { background: var(--color-warning-bg); }
   border-radius: var(--radius); font-size: 0.875rem;
 }
 
+/* === Form Row (side by side fields) === */
+.form-row { display: flex; gap: 1rem; }
+.form-row .form-group { flex: 1; }
+
+/* === Fieldset / Formset === */
+.ingredients-fieldset {
+  border: 1px solid var(--color-border); border-radius: var(--radius);
+  padding: 1rem; margin-top: 1rem;
+}
+.ingredients-fieldset legend {
+  font-weight: 600; font-size: 0.9375rem; padding: 0 0.5rem;
+}
+.formset-table { width: 100%; border-collapse: collapse; }
+.formset-table th {
+  text-align: left; font-size: 0.8rem; text-transform: uppercase;
+  color: var(--color-muted); font-weight: 600; padding: 0.5rem;
+}
+.formset-table td { padding: 0.5rem; }
+.formset-table select, .formset-table input[type="number"] {
+  width: 100%; padding: 0.4rem 0.5rem; border: 1px solid var(--color-border);
+  border-radius: var(--radius); font-size: 0.875rem;
+}
+.formset-table .delete-cell { text-align: center; width: 60px; }
+
+/* === Recipe Tooltip/Popup === */
+.recipe-tooltip {
+  position: relative; cursor: help;
+}
+.recipe-tooltip .recipe-popup {
+  display: none; position: absolute; left: 0; top: 100%;
+  z-index: 100; min-width: 250px; max-width: 350px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius); box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 0.75rem; margin-top: 0.25rem;
+}
+.recipe-tooltip:hover .recipe-popup { display: block; }
+.recipe-popup h4 { font-size: 0.9375rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.25rem; }
+.recipe-popup .recipe-stats { display: flex; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--color-muted); }
+.recipe-popup .recipe-stats span { font-weight: 600; color: var(--color-text); }
+.recipe-popup .recipe-ingredients { font-size: 0.8rem; }
+.recipe-popup .recipe-ingredients h5 { font-size: 0.75rem; text-transform: uppercase; color: var(--color-muted); margin: 0.5rem 0 0.25rem; }
+.recipe-popup .recipe-ingredients ul { list-style: none; margin: 0; padding: 0; }
+.recipe-popup .recipe-ingredients li { padding: 0.125rem 0; }
+
 /* === Confirm === */
 .confirm-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; max-width: 500px; }
 .confirm-card p { margin-bottom: 1rem; }

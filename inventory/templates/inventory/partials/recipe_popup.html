@@ -1,0 +1,21 @@
+{# Recipe popup content for hover tooltip #}
+<div class="recipe-popup">
+  <h4>{{ recipe.name }}</h4>
+  <div class="recipe-stats">
+    {% if recipe.abv %}<div>ABV: <span>{{ recipe.abv }}%</span></div>{% endif %}
+    {% if recipe.ibu %}<div>IBU: <span>{{ recipe.ibu }}</span></div>{% endif %}
+  </div>
+  {% if recipe.ingredients.all %}
+  <div class="recipe-ingredients">
+    {% regroup recipe.ingredients.all by ingredient.subcategory as ingredient_groups %}
+    {% for group in ingredient_groups %}
+    <h5>{{ group.grouper|default:"Other" }}</h5>
+    <ul>
+      {% for ri in group.list %}
+      <li>{{ ri.ingredient.name }}: {{ ri.amount }} {{ ri.unit }}</li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

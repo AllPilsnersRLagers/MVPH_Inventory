@@ -238,7 +238,17 @@ class TestRecipeCreateView:
         assert resp.status_code == 200
 
     def test_post_creates_recipe(self, client: Client, db: None) -> None:
-        resp = client.post("/recipes/create/", {"name": "Wheat Beer"})
+        data = {
+            "name": "Wheat Beer",
+            "abv": "5.0",
+            "ibu": "20",
+            # Formset management data
+            "ingredients-TOTAL_FORMS": "3",
+            "ingredients-INITIAL_FORMS": "0",
+            "ingredients-MIN_NUM_FORMS": "0",
+            "ingredients-MAX_NUM_FORMS": "1000",
+        }
+        resp = client.post("/recipes/create/", data)
         assert resp.status_code == 302
         assert Recipe.objects.filter(name="Wheat Beer").exists()
 
@@ -251,9 +261,17 @@ class TestRecipeUpdateView:
         assert resp.status_code == 200
 
     def test_post_updates_recipe(self, client: Client, pale_ale_recipe: Recipe) -> None:
-        resp = client.post(
-            f"/recipes/{pale_ale_recipe.pk}/edit/", {"name": "Session Pale Ale"}
-        )
+        data = {
+            "name": "Session Pale Ale",
+            "abv": "4.5",
+            "ibu": "35",
+            # Formset management data
+            "ingredients-TOTAL_FORMS": "3",
+            "ingredients-INITIAL_FORMS": "0",
+            "ingredients-MIN_NUM_FORMS": "0",
+            "ingredients-MAX_NUM_FORMS": "1000",
+        }
+        resp = client.post(f"/recipes/{pale_ale_recipe.pk}/edit/", data)
         assert resp.status_code == 302
         pale_ale_recipe.refresh_from_db()
         assert pale_ale_recipe.name == "Session Pale Ale"

@@ -8,14 +8,63 @@
 <form method="post" class="item-form">
   {% csrf_token %}
 
-  {% for field in form %}
-  <div class="form-group {% if field.errors %}has-error{% endif %}">
-    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-    {{ field }}
-    {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
-    {% for error in field.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+  <div class="form-group {% if form.name.errors %}has-error{% endif %}">
+    <label for="{{ form.name.id_for_label }}">Recipe Name</label>
+    {{ form.name }}
+    {% for error in form.name.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
   </div>
-  {% endfor %}
+
+  <div class="form-row">
+    <div class="form-group {% if form.abv.errors %}has-error{% endif %}">
+      <label for="{{ form.abv.id_for_label }}">ABV %</label>
+      {{ form.abv }}
+      {% for error in form.abv.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div class="form-group {% if form.ibu.errors %}has-error{% endif %}">
+      <label for="{{ form.ibu.id_for_label }}">IBU</label>
+      {{ form.ibu }}
+      {% for error in form.ibu.errors %}<p class="error-text">{{ error }}</p>{% endfor %}
+    </div>
+  </div>
+
+  <fieldset class="ingredients-fieldset">
+    <legend>Ingredients</legend>
+    {{ ingredient_formset.management_form }}
+
+    <table class="formset-table">
+      <thead>
+        <tr>
+          <th>Ingredient</th>
+          <th>Amount</th>
+          <th>Unit</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ingredient_form in ingredient_formset %}
+        <tr class="ingredient-row">
+          <td>
+            {{ ingredient_form.id }}
+            {{ ingredient_form.ingredient }}
+            {% for error in ingredient_form.ingredient.errors %}<span class="error-text">{{ error }}</span>{% endfor %}
+          </td>
+          <td>
+            {{ ingredient_form.amount }}
+            {% for error in ingredient_form.amount.errors %}<span class="error-text">{{ error }}</span>{% endfor %}
+          </td>
+          <td>
+            {{ ingredient_form.unit }}
+            {% for error in ingredient_form.unit.errors %}<span class="error-text">{{ error }}</span>{% endfor %}
+          </td>
+          <td class="delete-cell">
+            {{ ingredient_form.DELETE }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </fieldset>
 
   <div class="form-actions">
     <button type="submit" class="btn btn-primary">{% if recipe %}Save Changes{% else %}Create Recipe{% endif %}</button>

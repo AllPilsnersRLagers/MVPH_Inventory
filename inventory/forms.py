@@ -7,7 +7,13 @@ from typing import Any
 
 from django import forms
 
-from .models import SUBCATEGORY_MAP, InventoryItem, Recipe
+from .models import (
+    SUBCATEGORY_MAP,
+    Category,
+    InventoryItem,
+    Recipe,
+    RecipeIngredient,
+)
 
 
 class InventoryItemForm(forms.ModelForm):  # type: ignore[type-arg]
@@ -50,7 +56,38 @@ class RecipeForm(forms.ModelForm):  # type: ignore[type-arg]
 
     class Meta:
         model = Recipe
-        fields = ["name"]
+        fields = ["name", "abv", "ibu"]
+        widgets = {
+            "abv": forms.NumberInput(attrs={"step": "0.1", "min": "0", "max": "20"}),
+            "ibu": forms.NumberInput(attrs={"min": "0", "max": "200"}),
+        }
+
+
+class RecipeIngredientForm(forms.ModelForm):  # type: ignore[type-arg]
+    """Form for adding an ingredient to a recipe."""
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ["ingredient", "amount", "unit"]
+        widgets = {
+            "amount": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
+        }
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        # Only show ingredients in the dropdown
+        self.fields["ingredient"].queryset = InventoryItem.objects.filter(  # type: ignore[attr-defined]
+            category=Category.INGREDIENT
+        ).order_by("subcategory", "name")
+
+
+RecipeIngredientFormSet = forms.inlineformset_factory(
+    Recipe,
+    RecipeIngredient,
+    form=RecipeIngredientForm,
+    extra=3,
+    can_delete=True,
+)
 
 
 class QuickRecipeForm(forms.ModelForm):  # type: ignore[type-arg]

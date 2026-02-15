@@ -4,7 +4,22 @@
   <td>{{ item.subcategory_display }}</td>
   <td class="qty">{{ item.quantity_on_hand }}</td>
   <td>{{ item.get_unit_of_measure_display }}</td>
-  {% if show_earmarked_column %}<td>{% with recipes=item.earmarked_for.all %}{% if recipes %}{% for r in recipes %}{{ r.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %}{% endwith %}</td>{% endif %}
+  {% if show_earmarked_column %}
+  <td>
+    {% with recipes=item.earmarked_for.all %}
+    {% if recipes %}
+      {% for recipe in recipes %}
+      <span class="recipe-tooltip">
+        {{ recipe.name }}{% if not forloop.last %}, {% endif %}
+        {% include "inventory/partials/recipe_popup.html" %}
+      </span>
+      {% endfor %}
+    {% else %}
+      —
+    {% endif %}
+    {% endwith %}
+  </td>
+  {% endif %}
   <td>
     {% if item.is_low_stock %}
       <span class="badge badge-warning">Low</span>

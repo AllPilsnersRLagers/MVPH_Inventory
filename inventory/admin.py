@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from django.contrib import admin
 
-from .models import InventoryItem, Recipe
+from .models import InventoryItem, Recipe, RecipeIngredient
 
 
 @admin.register(InventoryItem)
@@ -34,10 +34,23 @@ class InventoryItemAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         return "—"
 
 
+class RecipeIngredientInline(admin.TabularInline):  # type: ignore[type-arg]
+    """Inline admin for recipe ingredients."""
+
+    model = RecipeIngredient
+    extra = 1
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     """Admin interface for Recipe."""
 
-    list_display = ["name", "created_at", "updated_at"]
+    list_display = ["name", "abv", "ibu", "ingredient_count", "created_at"]
     search_fields = ["name"]
     readonly_fields = ["id", "created_at", "updated_at"]
+    inlines = [RecipeIngredientInline]
+
+    @admin.display(description="Ingredients")
+    def ingredient_count(self, obj: Recipe) -> int:
+        """Display count of ingredients in the recipe."""
+        return obj.ingredients.count()

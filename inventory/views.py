@@ -5,7 +5,13 @@ from uuid import UUID
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import InventoryItemForm, QuickRecipeForm, RecipeForm, StockAdjustmentForm
+from .forms import (
+    InventoryItemForm,
+    QuickRecipeForm,
+    RecipeForm,
+    RecipeIngredientFormSet,
+    StockAdjustmentForm,
+)
 from .models import SUBCATEGORY_MAP, Category, InventoryItem, Recipe
 
 SORTABLE_COLUMNS = [
@@ -30,7 +36,11 @@ def _build_sort_url(
 
 def item_list(request: HttpRequest) -> HttpResponse:
     """List all inventory items with optional filtering, search, and sorting."""
-    items = InventoryItem.objects.prefetch_related("earmarked_for").all()
+    items = InventoryItem.objects.prefetch_related(
+        "earmarked_for",
+        "earmarked_for__ingredients",
+        "earmarked_for__ingredients__ingredient",
+    ).all()
 
     category = request.GET.get("category", "")
     subcategory = request.GET.get("subcategory", "")
@@ -223,12 +233,20 @@ def recipe_create(request: HttpRequest) -> HttpResponse:
     """Create a new recipe."""
     if request.method == "POST":
         form = RecipeForm(request.POST)
-        if form.is_valid():
-            form.save()
+        formset = RecipeIngredientFormSet(request.POST)
+        if form.is_valid() and formset.is_valid():
+            recipe = form.save()
+            formset.instance = recipe
+            formset.save()
             return redirect("inventory:recipe_list")
     else:
         form = RecipeForm()
-    return render(request, "inventory/recipe_form.html", {"form": form})
+        formset = RecipeIngredientFormSet()
+    return render(
+        request,
+        "inventory/recipe_form.html",
+        {"form": form, "ingredient_formset": formset},
+    )
 
 
 def recipe_update(request: HttpRequest, pk: UUID) -> HttpResponse:
@@ -236,13 +254,18 @@ def recipe_update(request: HttpRequest, pk: UUID) -> HttpResponse:
     recipe = get_object_or_404(Recipe, pk=pk)
     if request.method == "POST":
         form = RecipeForm(request.POST, instance=recipe)
-        if form.is_valid():
+        formset = RecipeIngredientFormSet(request.POST, instance=recipe)
+        if form.is_valid() and formset.is_valid():
             form.save()
+            formset.save()
             return redirect("inventory:recipe_list")
     else:
         form = RecipeForm(instance=recipe)
+        formset = RecipeIngredientFormSet(instance=recipe)
     return render(
-        request, "inventory/recipe_form.html", {"form": form, "recipe": recipe}
+        request,
+        "inventory/recipe_form.html",
+        {"form": form, "ingredient_formset": formset, "recipe": recipe},
     )
 
 

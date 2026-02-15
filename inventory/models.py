@@ -75,6 +75,20 @@ class Recipe(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200, unique=True)
+    abv = models.DecimalField(
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        verbose_name="ABV %",
+        help_text="Alcohol by volume percentage",
+    )
+    ibu = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="IBU",
+        help_text="International Bitterness Units",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -126,3 +140,29 @@ class InventoryItem(models.Model):
     def subcategory_display(self) -> str:
         """Return human-readable subcategory label."""
         return Subcategory(self.subcategory).label
+
+
+class RecipeIngredient(models.Model):
+    """An ingredient used in a recipe with its quantity."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="ingredients",
+    )
+    ingredient = models.ForeignKey(
+        InventoryItem,
+        on_delete=models.CASCADE,
+        related_name="recipe_usages",
+        limit_choices_to={"category": Category.INGREDIENT},
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    unit = models.CharField(max_length=10, choices=UnitOfMeasure.choices)
+
+    class Meta:
+        ordering = ["ingredient__subcategory", "ingredient__name"]
+        unique_together = ["recipe", "ingredient"]
+
+    def __str__(self) -> str:
+        return f"{self.ingredient.name}: {self.amount} {self.unit}"
