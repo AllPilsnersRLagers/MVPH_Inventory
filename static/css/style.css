@@ -101,6 +101,10 @@ tr.low-stock { background: var(--color-warning-bg); }
 .inline-form { display: flex; align-items: center; gap: 0.5rem; }
 .inline-form input { width: 100px; padding: 0.4rem 0.6rem; border: 1px solid var(--color-border); border-radius: var(--radius); }
 .adjust-label { font-size: 0.875rem; }
+.stock-preview { font-size: 0.875rem; font-weight: 600; }
+.stock-preview .current-qty { color: var(--color-muted); }
+.stock-preview .arrow { color: var(--color-muted); margin: 0 0.25rem; }
+.stock-preview .new-qty { color: var(--color-primary); }
 
 /* === Detail === */
 .detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }

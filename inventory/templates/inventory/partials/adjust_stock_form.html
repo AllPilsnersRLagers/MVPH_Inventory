@@ -6,7 +6,14 @@
           class="inline-form">
       {% csrf_token %}
       <span class="adjust-label">Adjust <strong>{{ item.name }}</strong>:</span>
-      {{ form.adjustment }}
+      <span class="stock-preview">
+        <span class="current-qty">{{ item.quantity_on_hand }}</span>
+        <span class="arrow">&rarr;</span>
+        <span class="new-qty" id="new-qty-{{ item.pk }}">{{ item.quantity_on_hand }}</span>
+      </span>
+      <input type="number" name="adjustment" id="adj-{{ item.pk }}"
+             step="0.1" value="0" autofocus
+             oninput="updatePreview('{{ item.pk }}', {{ item.quantity_on_hand }})">
       <button type="submit" class="btn btn-sm btn-primary">Apply</button>
       <button type="button"
               hx-get="{% url 'inventory:adjust_stock' item.pk %}?cancel=1"
@@ -14,5 +21,13 @@
               hx-swap="outerHTML"
               class="btn btn-sm">Cancel</button>
     </form>
+    <script>
+      function updatePreview(pk, current) {
+        const adj = parseFloat(document.getElementById('adj-' + pk).value) || 0;
+        let newQty = current + adj;
+        if (newQty < 0) newQty = 0;
+        document.getElementById('new-qty-' + pk).textContent = newQty.toFixed(2);
+      }
+    </script>
   </td>
 </tr>
