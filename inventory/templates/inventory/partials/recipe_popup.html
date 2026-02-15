@@ -12,7 +12,7 @@
     <h5>{{ group.grouper|default:"Other" }}</h5>
     <ul>
       {% for ri in group.list %}
-      <li>{{ ri.ingredient.name }}: {{ ri.amount }} {{ ri.unit }}</li>
+      <li>{{ ri.ingredient.name }}: <span class="amount">{{ ri.amount }}</span> {{ ri.unit }}</li>
       {% endfor %}
     </ul>
     {% endfor %}

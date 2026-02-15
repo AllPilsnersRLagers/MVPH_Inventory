@@ -186,6 +186,7 @@ tr.low-stock { background: var(--color-warning-bg); }
 .recipe-popup .recipe-ingredients h5 { font-size: 0.75rem; text-transform: uppercase; color: var(--color-muted); margin: 0.5rem 0 0.25rem; }
 .recipe-popup .recipe-ingredients ul { list-style: none; margin: 0; padding: 0; }
 .recipe-popup .recipe-ingredients li { padding: 0.125rem 0; }
+.recipe-popup .recipe-ingredients .amount { font-weight: 600; color: var(--color-danger); }
 
 /* === Confirm === */
 .confirm-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; max-width: 500px; }
