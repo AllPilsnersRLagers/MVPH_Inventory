@@ -10,14 +10,14 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   <header>
     <nav>
-      <a href="{% url 'inventory:item_list' %}" class="logo">MVPH Inventory</a>
+      <div class="nav-left">
+        <a href="{% url 'inventory:item_list' %}" class="logo">MVPH Inventory</a>
+        <span class="user-info">logged in as: <strong>{{ user.username }}</strong></span>
+      </div>
       <div class="nav-links">
         <a href="{% url 'inventory:recipe_list' %}" class="nav-link">Recipes</a>
         <a href="{% url 'inventory:item_create' %}" class="btn btn-primary">+ New Item</a>
-        <span class="user-info">
-          <span class="nav-link">{{ user.username }}</span>
-          <a href="{% url 'logout' %}" class="nav-link">Logout</a>
-        </span>
+        <a href="{% url 'logout' %}" class="nav-link">Logout</a>
       </div>
     </nav>
   </header>
