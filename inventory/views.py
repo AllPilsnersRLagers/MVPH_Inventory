@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -34,6 +35,7 @@ def _build_sort_url(
     return f"/?{params}"
 
 
+@login_required
 def item_list(request: HttpRequest) -> HttpResponse:
     """List all inventory items with optional filtering, search, and sorting."""
     items = InventoryItem.objects.prefetch_related(
@@ -123,12 +125,17 @@ def item_list(request: HttpRequest) -> HttpResponse:
     return render(request, "inventory/item_list.html", context)
 
 
+@login_required
 def item_create(request: HttpRequest) -> HttpResponse:
     """Create a new inventory item."""
     if request.method == "POST":
         form = InventoryItemForm(request.POST)
         if form.is_valid():
-            form.save()
+            item = form.save(commit=False)
+            item.created_by = request.user
+            item.updated_by = request.user
+            item.save()
+            form.save_m2m()
             return redirect("inventory:item_list")
     else:
         form = InventoryItemForm()
@@ -140,12 +147,14 @@ def item_create(request: HttpRequest) -> HttpResponse:
     )
 
 
+@login_required
 def item_detail(request: HttpRequest, pk: UUID) -> HttpResponse:
     """Display details for a single inventory item."""
     item = get_object_or_404(InventoryItem, pk=pk)
     return render(request, "inventory/item_detail.html", {"item": item})
 
 
+@login_required
 def item_update(request: HttpRequest, pk: UUID) -> HttpResponse:
     """Update an existing inventory item."""
     item = get_object_or_404(InventoryItem, pk=pk)
@@ -153,7 +162,10 @@ def item_update(request: HttpRequest, pk: UUID) -> HttpResponse:
     if request.method == "POST":
         form = InventoryItemForm(request.POST, instance=item)
         if form.is_valid():
-            form.save()
+            item = form.save(commit=False)
+            item.updated_by = request.user
+            item.save()
+            form.save_m2m()
             return redirect("inventory:item_detail", pk=item.pk)
     else:
         form = InventoryItemForm(instance=item)
@@ -165,6 +177,7 @@ def item_update(request: HttpRequest, pk: UUID) -> HttpResponse:
     )
 
 
+@login_required
 def item_delete(request: HttpRequest, pk: UUID) -> HttpResponse:
     """Delete an inventory item after confirmation."""
     item = get_object_or_404(InventoryItem, pk=pk)
@@ -176,6 +189,7 @@ def item_delete(request: HttpRequest, pk: UUID) -> HttpResponse:
     return render(request, "inventory/item_confirm_delete.html", {"item": item})
 
 
+@login_required
 def adjust_stock(request: HttpRequest, pk: UUID) -> HttpResponse:
     """HTMX endpoint: adjust stock quantity inline."""
     item = get_object_or_404(InventoryItem, pk=pk)
@@ -194,7 +208,7 @@ def adjust_stock(request: HttpRequest, pk: UUID) -> HttpResponse:
     if request.method == "POST":
         form = StockAdjustmentForm(request.POST)
         if form.is_valid():
-            form.apply_to(item)
+            form.apply_to(item, user=request.user)
             return render(request, "inventory/partials/item_row.html", row_context)
     else:
         form = StockAdjustmentForm()
@@ -206,6 +220,7 @@ def adjust_stock(request: HttpRequest, pk: UUID) -> HttpResponse:
     )
 
 
+@login_required
 def subcategory_options(request: HttpRequest) -> HttpResponse:
     """HTMX endpoint: return subcategory <option> elements for a given category."""
     category = request.GET.get("category", "")
@@ -223,19 +238,24 @@ def subcategory_options(request: HttpRequest) -> HttpResponse:
     )
 
 
+@login_required
 def recipe_list(request: HttpRequest) -> HttpResponse:
     """List all recipes."""
     recipes = Recipe.objects.all()
     return render(request, "inventory/recipe_list.html", {"recipes": recipes})
 
 
+@login_required
 def recipe_create(request: HttpRequest) -> HttpResponse:
     """Create a new recipe."""
     if request.method == "POST":
         form = RecipeForm(request.POST)
         formset = RecipeIngredientFormSet(request.POST)
         if form.is_valid() and formset.is_valid():
-            recipe = form.save()
+            recipe = form.save(commit=False)
+            recipe.created_by = request.user
+            recipe.updated_by = request.user
+            recipe.save()
             formset.instance = recipe
             formset.save()
             return redirect("inventory:recipe_list")
@@ -249,6 +269,7 @@ def recipe_create(request: HttpRequest) -> HttpResponse:
     )
 
 
+@login_required
 def recipe_update(request: HttpRequest, pk: UUID) -> HttpResponse:
     """Update an existing recipe."""
     recipe = get_object_or_404(Recipe, pk=pk)
@@ -256,7 +277,9 @@ def recipe_update(request: HttpRequest, pk: UUID) -> HttpResponse:
         form = RecipeForm(request.POST, instance=recipe)
         formset = RecipeIngredientFormSet(request.POST, instance=recipe)
         if form.is_valid() and formset.is_valid():
-            form.save()
+            recipe = form.save(commit=False)
+            recipe.updated_by = request.user
+            recipe.save()
             formset.save()
             return redirect("inventory:recipe_list")
     else:
@@ -269,6 +292,7 @@ def recipe_update(request: HttpRequest, pk: UUID) -> HttpResponse:
     )
 
 
+@login_required
 def recipe_delete(request: HttpRequest, pk: UUID) -> HttpResponse:
     """Delete a recipe after confirmation."""
     recipe = get_object_or_404(Recipe, pk=pk)
@@ -278,6 +302,7 @@ def recipe_delete(request: HttpRequest, pk: UUID) -> HttpResponse:
     return render(request, "inventory/recipe_confirm_delete.html", {"recipe": recipe})
 
 
+@login_required
 def recipe_quick_add(request: HttpRequest) -> HttpResponse:
     """HTMX endpoint: quick-add a recipe and return updated earmarked_for select."""
     if request.method == "POST":
@@ -285,7 +310,10 @@ def recipe_quick_add(request: HttpRequest) -> HttpResponse:
         data = {"name": request.POST.get("recipe_name", "")}
         form = QuickRecipeForm(data)
         if form.is_valid():
-            new_recipe = form.save()
+            new_recipe = form.save(commit=False)
+            new_recipe.created_by = request.user
+            new_recipe.updated_by = request.user
+            new_recipe.save()
             recipes = Recipe.objects.all()
             # Return OOB swap for checkbox list + empty slot content
             return render(

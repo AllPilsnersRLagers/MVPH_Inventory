@@ -1,8 +1,11 @@
 """Inventory models for brewery inventory management."""
 
+from __future__ import annotations
+
 import uuid
 from decimal import Decimal
 
+from django.conf import settings
 from django.db import models
 
 
@@ -91,6 +94,20 @@ class Recipe(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="recipes_created",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="recipes_updated",
+    )
 
     class Meta:
         ordering = ["name"]
@@ -124,6 +141,20 @@ class InventoryItem(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="items_created",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="items_updated",
+    )
 
     class Meta:
         ordering = ["name"]

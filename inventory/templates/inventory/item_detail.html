@@ -44,10 +44,10 @@
     {% endif %}
 
     <dt>Created</dt>
-    <dd>{{ item.created_at|date:"N j, Y g:i a" }}</dd>
+    <dd>{{ item.created_at|date:"N j, Y g:i a" }}{% if item.created_by %} by {{ item.created_by.username }}{% endif %}</dd>
 
     <dt>Updated</dt>
-    <dd>{{ item.updated_at|date:"N j, Y g:i a" }}</dd>
+    <dd>{{ item.updated_at|date:"N j, Y g:i a" }}{% if item.updated_by %} by {{ item.updated_by.username }}{% endif %}</dd>
   </dl>
 </div>
 

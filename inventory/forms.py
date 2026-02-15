@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from django import forms
+
 
 from .models import (
     SUBCATEGORY_MAP,
@@ -111,11 +112,15 @@ class StockAdjustmentForm(forms.Form):
         help_text="Positive to add, negative to subtract.",
     )
 
-    def apply_to(self, item: InventoryItem) -> InventoryItem:
+    def apply_to(self, item: InventoryItem, user: Any = None) -> InventoryItem:
         """Apply the stock adjustment to the given item."""
         adjustment: Decimal = self.cleaned_data["adjustment"]
         item.quantity_on_hand += adjustment
         if item.quantity_on_hand < Decimal("0.00"):
             item.quantity_on_hand = Decimal("0.00")
-        item.save(update_fields=["quantity_on_hand", "updated_at"])
+        update_fields = ["quantity_on_hand", "updated_at"]
+        if user is not None:
+            item.updated_by = user
+            update_fields.append("updated_by")
+        item.save(update_fields=update_fields)
         return item

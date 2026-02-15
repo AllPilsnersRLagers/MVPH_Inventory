@@ -3,6 +3,8 @@
 from decimal import Decimal
 
 import pytest
+from django.contrib.auth.models import User
+from django.test import Client
 
 from inventory.models import (
     Category,
@@ -11,6 +13,20 @@ from inventory.models import (
     Subcategory,
     UnitOfMeasure,
 )
+
+
+@pytest.fixture
+def user(db: None) -> User:
+    """A test user for authentication."""
+    return User.objects.create_user(username="testuser", password="testpass123")
+
+
+@pytest.fixture
+def authenticated_client(user: User) -> Client:
+    """A logged-in test client."""
+    client = Client()
+    client.login(username="testuser", password="testpass123")
+    return client
 
 
 @pytest.fixture

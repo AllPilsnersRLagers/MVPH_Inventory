@@ -194,3 +194,6 @@ tr.low-stock { background: var(--color-warning-bg); }
 
 /* === Empty state === */
 .empty-state { text-align: center; padding: 3rem 1rem; color: var(--color-muted); }
+
+/* === User Info === */
+.user-info { display: flex; align-items: center; gap: 0.5rem; }
