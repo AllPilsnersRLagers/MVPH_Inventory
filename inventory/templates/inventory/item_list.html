@@ -3,8 +3,6 @@
 {% block title %}Inventory — MVPH{% endblock %}
 
 {% block content %}
-<h1>Inventory</h1>
-
 <div class="filters">
   <div id="category-tabs" class="category-tabs" role="tablist">
     <a href="{% url 'inventory:item_list' %}"
@@ -28,6 +26,8 @@
        hx-target="#item-table-wrapper"
        hx-push-url="true">Finished Goods</a>
   </div>
+
+  <a href="{% url 'inventory:item_create' %}" class="btn btn-add">+ New Item</a>
 
   <input type="search"
          name="search"

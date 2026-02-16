@@ -16,6 +16,8 @@
   --color-ok-bg: #d1e7dd;
   --color-ok-text: #0f5132;
   --radius: 6px;
+  --header-height: 95px;
+  --filters-height: 85px;
 }
 
 body {
@@ -26,17 +28,25 @@ body {
 }
 
 /* === Layout === */
-header { background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+header {
+  background: var(--color-surface);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 4px 0 var(--color-bg);
+}
 nav {
   max-width: 1200px; margin: 0 auto; padding: 1rem 1.25rem;
   display: flex; align-items: center; justify-content: space-between;
 }
 .logo { font-weight: 700; font-size: 2.5rem; text-decoration: none; color: var(--color-text); }
 .nav-left { display: flex; align-items: center; gap: 1.5rem; }
-.nav-links { display: flex; align-items: center; gap: 1rem; }
-.nav-link { text-decoration: none; color: var(--color-muted); font-size: 1.125rem; }
-.nav-link:hover { color: var(--color-text); }
-main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.25rem; }
+.nav-links { display: flex; align-items: center; gap: 0.75rem; }
+.nav-link {
+  display: inline-block; padding: 0.5rem 1rem; border-radius: var(--radius);
+  text-decoration: none; font-size: 1.125rem; border: 1px solid var(--color-border);
+  background: var(--color-bg); color: var(--color-text);
+}
+.nav-link:hover { background: var(--color-border); }
+main { max-width: 1200px; margin: -1px auto 0; padding: 0 1.25rem 2rem; }
 h1 { margin-bottom: 1rem; font-size: 1.75rem; }
 
 /* === Buttons === */
@@ -50,10 +60,16 @@ h1 { margin-bottom: 1rem; font-size: 1.75rem; }
 .btn-primary:hover { background: var(--color-primary-hover); border-color: var(--color-primary-hover); }
 .btn-danger { background: var(--color-danger); color: #fff; border-color: var(--color-danger); }
 .btn-danger:hover { background: var(--color-danger-hover); border-color: var(--color-danger-hover); }
+.btn-add { background: #e7f1ff; color: var(--color-primary); border-color: #b6d4fe; }
+.btn-add:hover { background: #cfe2ff; border-color: #9ec5fe; }
 .btn-sm { padding: 0.35rem 0.65rem; font-size: 1rem; }
 
 /* === Filters === */
-.filters { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.filters {
+  display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 0;
+  position: sticky; top: var(--header-height); z-index: 90;
+  background: var(--color-bg); padding: 1.25rem 0;
+}
 .category-tabs { display: flex; gap: 0.25rem; }
 .tab {
   padding: 0.5rem 1rem; border-radius: var(--radius); text-decoration: none;
@@ -67,7 +83,11 @@ h1 { margin-bottom: 1rem; font-size: 1.75rem; }
 }
 
 /* === Sub-tabs (ingredient subcategories) === */
-.sub-tabs { display: flex; gap: 0.25rem; margin-bottom: 1rem; }
+.sub-tabs {
+  display: flex; gap: 0.25rem; margin-bottom: 1rem;
+  position: sticky; top: calc(var(--header-height) + var(--filters-height)); z-index: 80;
+  background: var(--color-bg); padding: 0.625rem 0 1.25rem;
+}
 .sub-tab {
   padding: 0.35rem 0.75rem; border-radius: var(--radius); text-decoration: none;
   font-size: 1rem; color: var(--color-muted); border: 1px solid transparent;
