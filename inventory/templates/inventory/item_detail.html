@@ -13,6 +13,11 @@
 
 <div class="detail-card">
   <dl>
+    {% if item.manufacturer %}
+    <dt>Manufacturer</dt>
+    <dd>{{ item.manufacturer }}</dd>
+    {% endif %}
+
     <dt>Category</dt>
     <dd>{{ item.get_category_display }}</dd>
 

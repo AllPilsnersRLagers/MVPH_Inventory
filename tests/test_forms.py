@@ -106,6 +106,42 @@ class TestInventoryItemForm:
         item = form.save()
         assert item.earmarked_for.count() == 0
 
+    def test_manufacturer_field_exists(self, db: None) -> None:
+        form = InventoryItemForm()
+        assert "manufacturer" in form.fields
+
+    def test_manufacturer_optional(self, db: None) -> None:
+        data = {
+            "name": "Test Malt",
+            "category": Category.INGREDIENT,
+            "subcategory": Subcategory.MALT,
+            "quantity_on_hand": "50.00",
+            "unit_of_measure": UnitOfMeasure.LB,
+            "reorder_point": "10.00",
+            "description": "",
+            "notes": "",
+            # manufacturer intentionally omitted
+        }
+        form = InventoryItemForm(data=data)
+        assert form.is_valid(), form.errors
+
+    def test_manufacturer_saved(self, db: None) -> None:
+        data = {
+            "name": "2-Row Malt",
+            "manufacturer": "Briess",
+            "category": Category.INGREDIENT,
+            "subcategory": Subcategory.MALT,
+            "quantity_on_hand": "50.00",
+            "unit_of_measure": UnitOfMeasure.LB,
+            "reorder_point": "10.00",
+            "description": "",
+            "notes": "",
+        }
+        form = InventoryItemForm(data=data)
+        assert form.is_valid(), form.errors
+        item = form.save()
+        assert item.manufacturer == "Briess"
+
 
 class TestStockAdjustmentForm:
     """Tests for the StockAdjustmentForm."""

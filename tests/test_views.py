@@ -400,6 +400,50 @@ class TestItemHistoryView:
         assert b"No change history" in resp.content
 
 
+class TestManufacturerSearch:
+    """Tests for manufacturer in search functionality."""
+
+    def test_search_by_manufacturer(
+        self, authenticated_client: Client, db: None
+    ) -> None:
+        InventoryItem.objects.create(
+            name="2-Row Malt",
+            manufacturer="Briess",
+            category=Category.INGREDIENT,
+            subcategory=Subcategory.MALT,
+            quantity_on_hand=Decimal("50.00"),
+            unit_of_measure=UnitOfMeasure.LB,
+            reorder_point=Decimal("10.00"),
+        )
+        InventoryItem.objects.create(
+            name="2-Row Malt",
+            manufacturer="Rahr",
+            category=Category.INGREDIENT,
+            subcategory=Subcategory.MALT,
+            quantity_on_hand=Decimal("25.00"),
+            unit_of_measure=UnitOfMeasure.LB,
+            reorder_point=Decimal("10.00"),
+        )
+        resp = authenticated_client.get("/?search=briess")
+        assert b"Briess" in resp.content
+        assert b"Rahr" not in resp.content
+
+    def test_manufacturer_shown_in_list(
+        self, authenticated_client: Client, db: None
+    ) -> None:
+        InventoryItem.objects.create(
+            name="2-Row Malt",
+            manufacturer="Viking",
+            category=Category.INGREDIENT,
+            subcategory=Subcategory.MALT,
+            quantity_on_hand=Decimal("50.00"),
+            unit_of_measure=UnitOfMeasure.LB,
+            reorder_point=Decimal("10.00"),
+        )
+        resp = authenticated_client.get("/")
+        assert b"Viking" in resp.content
+
+
 class TestChangeLogging:
     """Tests for automatic change logging in views."""
 

@@ -22,6 +22,38 @@ class TestInventoryItem:
     def test_str(self, hop_item: InventoryItem) -> None:
         assert str(hop_item) == "Cascade Hops"
 
+    def test_str_with_manufacturer(self, db: None) -> None:
+        item = InventoryItem.objects.create(
+            name="2-Row Malt",
+            manufacturer="Briess",
+            category=Category.INGREDIENT,
+            subcategory=Subcategory.MALT,
+            unit_of_measure=UnitOfMeasure.LB,
+        )
+        assert str(item) == "2-Row Malt (Briess)"
+
+    def test_manufacturer_blank_by_default(self, hop_item: InventoryItem) -> None:
+        assert hop_item.manufacturer == ""
+
+    def test_ordering_includes_manufacturer(self, db: None) -> None:
+        InventoryItem.objects.create(
+            name="2-Row Malt",
+            manufacturer="Rahr",
+            category=Category.INGREDIENT,
+            subcategory=Subcategory.MALT,
+            unit_of_measure=UnitOfMeasure.LB,
+        )
+        InventoryItem.objects.create(
+            name="2-Row Malt",
+            manufacturer="Briess",
+            category=Category.INGREDIENT,
+            subcategory=Subcategory.MALT,
+            unit_of_measure=UnitOfMeasure.LB,
+        )
+        items = list(InventoryItem.objects.values_list("manufacturer", flat=True))
+        # Alphabetical by manufacturer after name
+        assert items == ["Briess", "Rahr"]
+
     def test_is_low_stock_false(self, hop_item: InventoryItem) -> None:
         assert hop_item.is_low_stock is False
 

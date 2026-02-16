@@ -1,5 +1,6 @@
 <tr id="item-row-{{ item.pk }}" class="{% if item.stock_status == 'reorder' %}reorder-stock{% elif item.stock_status == 'low' %}low-stock{% endif %}">
   <td><a href="{% url 'inventory:item_detail' item.pk %}">{{ item.name }}</a></td>
+  <td>{{ item.manufacturer|default:"—" }}</td>
   <td>{{ item.get_category_display }}</td>
   <td>{{ item.subcategory_display }}</td>
   <td class="qty">{{ item.quantity_on_hand }}</td>

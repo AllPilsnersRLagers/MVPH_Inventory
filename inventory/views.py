@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 SORTABLE_COLUMNS = [
     ("name", "Name"),
+    ("manufacturer", "Manufacturer"),
     ("category", "Category"),
     ("subcategory", "Subcategory"),
     ("quantity_on_hand", "Qty"),
@@ -73,7 +74,11 @@ def item_list(request: HttpRequest) -> HttpResponse:
     if subcategory:
         items = items.filter(subcategory=subcategory)
     if search:
-        items = items.filter(name__icontains=search)
+        from django.db.models import Q
+
+        items = items.filter(
+            Q(name__icontains=search) | Q(manufacturer__icontains=search)
+        )
 
     # Validate and apply sorting
     sortable_field_names = {f for f, _ in SORTABLE_COLUMNS}

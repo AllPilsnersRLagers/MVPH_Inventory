@@ -122,6 +122,12 @@ class InventoryItem(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
+    manufacturer = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+        help_text="Manufacturer or supplier name (e.g., Briess, Rahr, Viking)",
+    )
     category = models.CharField(max_length=20, choices=Category.choices)
     subcategory = models.CharField(max_length=20, choices=Subcategory.choices)
     description = models.TextField(blank=True, default="")
@@ -158,9 +164,11 @@ class InventoryItem(models.Model):
     )
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["name", "manufacturer"]
 
     def __str__(self) -> str:
+        if self.manufacturer:
+            return f"{self.name} ({self.manufacturer})"
         return self.name
 
     @property
@@ -256,6 +264,7 @@ class ItemChangeLog(models.Model):
 # Fields to track for change logging
 TRACKED_FIELDS = [
     "name",
+    "manufacturer",
     "category",
     "subcategory",
     "description",

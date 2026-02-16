@@ -23,6 +23,7 @@ class InventoryItemForm(forms.ModelForm):  # type: ignore[type-arg]
         model = InventoryItem
         fields = [
             "name",
+            "manufacturer",
             "category",
             "subcategory",
             "description",

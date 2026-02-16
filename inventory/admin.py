@@ -13,6 +13,7 @@ class InventoryItemAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
 
     list_display = [
         "name",
+        "manufacturer",
         "category",
         "subcategory",
         "quantity_on_hand",
@@ -20,8 +21,8 @@ class InventoryItemAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         "earmarked_recipes",
         "is_low_stock",
     ]
-    list_filter = ["category", "subcategory"]
-    search_fields = ["name", "description"]
+    list_filter = ["category", "subcategory", "manufacturer"]
+    search_fields = ["name", "manufacturer", "description"]
     readonly_fields = ["id", "created_at", "updated_at"]
     filter_horizontal = ["earmarked_for"]
 
